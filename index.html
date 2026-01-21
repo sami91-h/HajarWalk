@@ -5,107 +5,173 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     <title>ممشى الهجر - الواقع المعزز</title>
     
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700&family=Amiri:wght@700&display=swap" rel="stylesheet">
     <script src="https://aframe.io/releases/1.3.0/aframe.min.js"></script>
     <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar-nft.js"></script>
     <script src="https://unpkg.com/aframe-look-at-component@0.8.0/dist/aframe-look-at-component.min.js"></script>
 
     <style>
-        /* تنظيف الصفحة بالكامل */
-        body, html {
-            margin: 0; padding: 0; overflow: hidden;
-            background-color: transparent !important; /* هام جداً: خلفية شفافة */
-        }
+        body, html { margin: 0; padding: 0; overflow: hidden; background-color: transparent !important; font-family: 'Tajawal', sans-serif; }
 
-        /* واجهة المستخدم تطفو فوق الكاميرا */
-        #ui-overlay {
+        /* واجهة الزجاج العصرية */
+        #intro-screen {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(15, 23, 42, 0.9); /* خلفية داكنة للبداية فقط */
+            background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(12px);
             z-index: 9999; display: flex; flex-direction: column;
-            align-items: center; justify-content: center; color: white; text-align: center;
-            transition: opacity 0.5s;
+            align-items: center; justify-content: center; text-align: center; color: white;
+            transition: all 0.8s ease-in-out;
         }
 
-        /* إطار الخريطة */
-        .map-box {
-            width: 80%; height: 200px; background: #334155;
-            border: 2px solid #22d3ee; border-radius: 15px; margin-bottom: 20px;
-            display: flex; align-items: center; justify-content: center;
+        .content-box {
+            background: rgba(255, 255, 255, 0.05); padding: 30px; border-radius: 30px;
+            border: 1px solid rgba(255, 255, 255, 0.1); width: 85%; max-width: 400px;
         }
 
-        h1 { color: #22d3ee; margin: 0 0 10px; font-family: 'Tajawal', sans-serif; }
-        p { color: #cbd5e1; font-family: 'Tajawal', sans-serif; }
+        h1 { color: #22d3ee; margin: 0 0 10px; font-size: 26px; }
+        p { color: #cbd5e1; margin-bottom: 30px; font-size: 16px; line-height: 1.6; }
 
-        /* زر البدء */
-        button {
-            background: #22d3ee; color: #0f172a; border: none; padding: 15px 40px;
-            font-size: 18px; font-weight: bold; border-radius: 50px; cursor: pointer;
-            margin-top: 20px;
+        .start-btn {
+            background: linear-gradient(135deg, #22d3ee 0%, #0ea5e9 100%);
+            border: none; padding: 15px 60px; color: white; font-size: 18px; font-weight: bold;
+            border-radius: 50px; cursor: pointer; box-shadow: 0 0 20px rgba(14, 165, 233, 0.4);
+            transition: transform 0.2s;
+        }
+        .start-btn:active { transform: scale(0.95); }
+
+        /* الخريطة الذكية */
+        #smart-map {
+            position: absolute; transition: all 1s cubic-bezier(0.68, -0.55, 0.27, 1.55);
+            z-index: 10000; overflow: hidden; border: 2px solid #22d3ee; background-color: #0f172a;
+            box-shadow: 0 0 15px rgba(34, 211, 238, 0.3);
         }
 
-        /* التوقيع */
-        .footer { position: absolute; bottom: 20px; color: #94a3b8; font-size: 12px; }
+        .map-initial {
+            width: 220px; height: 220px; border-radius: 25px;
+            margin-bottom: 25px; position: relative; display: block; margin-left: auto; margin-right: auto;
+        }
 
-        /* إصلاح مشكلة الكاميرا السوداء */
-        .arjs-loader { display: none !important; } 
+        .map-corner {
+            width: 90px; height: 90px; border-radius: 50%;
+            top: 25px; left: 25px; border-width: 3px; opacity: 0.95;
+        }
+
+        .map-img { width: 100%; height: 100%; object-fit: cover; opacity: 0.8; }
+
+        .user-dot {
+            position: absolute; top: 50%; left: 50%; width: 12px; height: 12px;
+            background-color: #ef4444; border-radius: 50%; transform: translate(-50%, -50%);
+            border: 2px solid white; box-shadow: 0 0 10px #ef4444; z-index: 2;
+        }
+        .user-dot::after {
+            content: ''; position: absolute; top: 50%; left: 50%; width: 100%; height: 100%;
+            background-color: rgba(239, 68, 68, 0.5); border-radius: 50%;
+            transform: translate(-50%, -50%); animation: pulse 2s infinite;
+        }
+        @keyframes pulse { 0% { width: 100%; opacity: 0.8; } 100% { width: 300%; opacity: 0; } }
+
+        .arjs-loader { display: none !important; }
+        .footer { margin-top: 25px; font-size: 11px; color: #64748b; letter-spacing: 1px; }
     </style>
 </head>
 
 <body>
 
-    <div id="ui-overlay">
-        <div class="map-box">
-            <p>خريطة المسار</p>
+    <div id="smart-map" class="map-initial">
+        <img src="map_preview.jpg" class="map-img" alt="Map">
+        <div class="user-dot"></div>
+    </div>
+
+    <div id="intro-screen">
+        <div class="content-box">
+            <div style="height: 240px;"></div> <h1>ممشى الهجر</h1>
+            <p>رحلة بين الطبيعة والسكينة.<br>استمتع بالمشي والتأمل.</p>
+            <button class="start-btn" onclick="startApp()">ابدأ</button>
+            <div class="footer">تعديل وإنشاء: سامي السمري</div>
         </div>
-        <h1>ممشى الهجر</h1>
-        <p>جولة تفاعلية بالواقع المعزز</p>
-        <button onclick="startApp()">ابدأ الجولة</button>
-        <div class="footer">تعديل وإنشاء: سامي السمري</div>
     </div>
 
     <a-scene 
-        vr-mode-ui="enabled: false"
-        embedded
-        arjs="sourceType: webcam; debugUIEnabled: false;"
-        renderer="antialias: true; alpha: true;">
+        vr-mode-ui="enabled: false" embedded
+        arjs="sourceType: webcam; sourceWidth: 1280; sourceHeight: 720; displayWidth: 1280; displayHeight: 720; debugUIEnabled: false;"
+        renderer="antialias: true; alpha: true; logarithmicDepthBuffer: true;">
 
-        <a-camera gps-camera rotation-reader far="1000"></a-camera>
-
-        <a-entity position="0 0 -3">
-            <a-cone color="#22d3ee" position="0 0.5 0" radius-bottom="0.2" radius-top="0" height="0.5" rotation="180 0 0"></a-cone>
-            <a-text value="تجربة الشكل" align="center" position="0 1 0" color="white" scale="1.5 1.5 1.5"></a-text>
-        </a-entity>
-
+        <a-camera gps-camera rotation-reader far="3000"></a-camera>
 
         <a-entity gps-entity-place="latitude: 23.28061; longitude: 56.92604;">
-            <a-image src="#img-welcome" scale="2 2 1" look-at="[gps-camera]" position="0 2 0"></a-image>
+            <a-image src="#img-welcome" scale="3 2 1" look-at="[gps-camera]" position="0 2.5 0"></a-image>
+            <a-text value="بداية الممشى" color="#22d3ee" align="center" position="0 1 0" scale="2 2 2"></a-text>
         </a-entity>
 
-        <a-entity gps-entity-place="latitude: 23.28022167; longitude: 56.92759333;">
-            <a-entity position="0 0 0" rotation="0 0 0" animation="property: position; to: 0 0.5 0; dir: alternate; dur: 2000; loop: true">
-                 <a-triangle color="#22d3ee" vertex-a="0 0.5 0" vertex-b="-0.25 -0.25 0" vertex-c="0.25 -0.25 0" rotation="-90 0 0"></a-triangle>
+        <a-entity gps-entity-place="latitude: 23.280455; longitude: 56.926428;">
+            <a-entity position="0 0 0" rotation="-90 0 0" animation="property: position; to: 0 0.5 0; dir: alternate; dur: 1500; loop: true">
+                <a-triangle color="#22d3ee" vertex-a="0 0.5 0" vertex-b="-0.3 -0.3 0" vertex-c="0.3 -0.3 0"></a-triangle>
             </a-entity>
+        </a-entity>
+        
+        <a-entity gps-entity-place="latitude: 23.280363; longitude: 56.926905;">
+            <a-entity position="0 0 0" rotation="-90 0 0" animation="property: position; to: 0 0.5 0; dir: alternate; dur: 1500; loop: true">
+                <a-triangle color="#22d3ee" vertex-a="0 0.5 0" vertex-b="-0.3 -0.3 0" vertex-c="0.3 -0.3 0"></a-triangle>
+            </a-entity>
+        </a-entity>
+
+        <a-entity gps-entity-place="latitude: 23.280173; longitude: 56.92799;">
+             <a-entity position="0 0 0" rotation="-90 0 0" animation="property: position; to: 0 0.5 0; dir: alternate; dur: 1500; loop: true">
+                <a-triangle color="#22d3ee" vertex-a="0 0.5 0" vertex-b="-0.3 -0.3 0" vertex-c="0.3 -0.3 0"></a-triangle>
+            </a-entity>
+        </a-entity>
+
+        <a-entity gps-entity-place="latitude: 23.279621; longitude: 56.92969;">
+             <a-entity position="0 0 0" rotation="-90 0 0" animation="property: position; to: 0 0.5 0; dir: alternate; dur: 1500; loop: true">
+                <a-triangle color="#22d3ee" vertex-a="0 0.5 0" vertex-b="-0.3 -0.3 0" vertex-c="0.3 -0.3 0"></a-triangle>
+            </a-entity>
+        </a-entity>
+
+        <a-entity gps-entity-place="latitude: 23.280236; longitude: 56.927348;">
+            <a-text value="سبحان الله وبحمده" look-at="[gps-camera]" position="0 4 0" scale="4 4 4" color="#fbbf24" align="center" font="kelsonsans"></a-text>
+            <a-text value="سبحان الله العظيم" look-at="[gps-camera]" position="0 3 0" scale="4 4 4" color="#fbbf24" align="center" font="kelsonsans"></a-text>
+            <a-sphere color="#fbbf24" radius="0.2" position="0 3.5 0" material="opacity: 0.5" animation="property: scale; to: 3 3 3; dir: alternate; dur: 2000; loop: true"></a-sphere>
+        </a-entity>
+
+        <a-entity gps-entity-place="latitude: 23.279883; longitude: 56.92882;">
+            <a-image src="#img-hadith" scale="4 3 1" look-at="[gps-camera]" position="0 2.5 0"></a-image>
+            <a-sound src="#audio-hadith" autoplay="false" distanceModel="exponential" maxDistance="10"></a-sound>
+        </a-entity>
+
+
+        <a-entity gps-entity-place="latitude: 23.278428; longitude: 56.93257;">
+             <a-text value="الحمد لله على السلامة\nنهاية المسار" look-at="[gps-camera]" scale="6 6 6" position="0 5 0" color="#4ade80" align="center"></a-text>
         </a-entity>
 
         <a-assets>
             <img id="img-welcome" src="board_welcome.jpg">
-            </a-assets>
+            <img id="img-hadith" src="board_hadith.jpg"> <audio id="audio-hadith" src="hadith_voice.mp3"></audio> </a-assets>
 
     </a-scene>
 
     <script>
         function startApp() {
-            // إخفاء الواجهة ببطء
-            var ui = document.getElementById('ui-overlay');
-            ui.style.opacity = '0';
-            setTimeout(function(){ ui.style.display = 'none'; }, 500);
+            // إخفاء الواجهة
+            var intro = document.getElementById('intro-screen');
+            intro.style.opacity = '0';
+            setTimeout(() => { intro.style.display = 'none'; }, 800);
+
+            // تحريك الخريطة
+            var map = document.getElementById('smart-map');
+            map.classList.remove('map-initial');
+            map.classList.add('map-corner');
 
             // نطق المقدمة
             speak();
+            
+            // تفعيل الأصوات
+            setTimeout(() => { window.dispatchEvent(new Event('resize')); }, 500);
+            const sounds = document.querySelectorAll('a-sound');
+            sounds.forEach(sound => { sound.components.sound.playSound(); sound.components.sound.stopSound(); });
         }
 
         function speak() {
             if ('speechSynthesis' in window) {
-                var msg = new SpeechSynthesisUtterance("حياكم الله في ممشى الهجر");
+                var msg = new SpeechSynthesisUtterance("بسم الله نبدأ.. أهلاً بكم في ممشى الهجر، تقبل الله طاعتكم ورياضتكم.");
                 msg.lang = 'ar-SA';
                 window.speechSynthesis.speak(msg);
             }
