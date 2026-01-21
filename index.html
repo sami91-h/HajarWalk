@@ -2,38 +2,168 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>ممشى بلدة الهجر الذكي</title>
+    
     <script src="https://aframe.io/releases/1.3.0/aframe.min.js"></script>
     <script src="https://unpkg.com/aframe-look-at-component@0.8.0/dist/aframe-look-at-component.min.js"></script>
     <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar-nft.js"></script>
     
     <style>
         :root { --gold: #ffd700; --dark: rgba(0, 0, 0, 0.9); }
-        body { margin: 0; font-family: 'Segoe UI', sans-serif; overflow: hidden; background: #000; color: white; }
         
-        /* واجهة البداية */
+        /* #إصلاح_2: تجميد الصفحة ومنع الاهتزاز */
+        html, body {
+            margin: 0; padding: 0; width: 100%; height: 100%;
+            overflow: hidden; /* يمنع السكرول نهائياً */
+            position: fixed; /* يثبت الصفحة في مكانها */
+        }
+        
+        /* تحسين مظهر الواجهات فوق الكاميرا */
         #splash {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             background: linear-gradient(rgba(0,0,0,0.85), rgba(0,0,0,0.85)), url('https://images.unsplash.com/photo-1502472545331-106598379412?auto=format&fit=crop&w=1000');
-            background-size: cover; display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 5000; text-align: center; padding: 20px;
+            background-size: cover; display: flex; flex-direction: column; 
+            justify-content: center; align-items: center; z-index: 9999; text-align: center;
         }
 
-        /* الرادار ومعلومات الزائر */
-        #mini-map { position: fixed; top: 20px; right: 20px; width: 120px; height: 120px; background: var(--dark); border: 2px solid var(--gold); border-radius: 50%; z-index: 1000; display: none; overflow: hidden; }
-        #user-dot { position: absolute; width: 10px; height: 10px; background: red; border-radius: 50%; transform: translate(-50%, -50%); top: 50%; left: 50%; z-index: 10; border: 2px solid white; }
+        #mini-map { position: absolute; top: 20px; right: 20px; width: 100px; height: 100px; background: var(--dark); border: 2px solid var(--gold); border-radius: 50%; z-index: 1000; display: none; overflow: hidden; }
+        #user-dot { position: absolute; width: 8px; height: 8px; background: red; border-radius: 50%; transform: translate(-50%, -50%); top: 50%; left: 50%; border: 2px solid white; }
         
-        /* بطاقة المعلومات */
         #info-card {
-            position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%) translateY(200%);
-            width: 85%; background: var(--dark); padding: 20px; border-radius: 20px;
-            z-index: 1000; transition: 0.5s; border-top: 4px solid var(--gold);
+            position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%) translateY(200%);
+            width: 85%; background: var(--dark); padding: 20px; border-radius: 20px; color: white;
+            z-index: 1000; transition: 0.5s; border-top: 4px solid var(--gold); box-sizing: border-box;
         }
         #info-card.active { transform: translateX(-50%) translateY(0); }
 
-        /* الأزرار */
-        .btn-main { padding: 15px 40px; background: var(--gold); border: none; border-radius: 50px; font-weight: bold; cursor: pointer; font-size: 1.1rem; margin-top: 20px; }
-        .v-selector { display: flex; gap: 10px; margin: 15px 0; }
+        .btn-main { padding: 15px 40px; background: var(--gold); border: none; border-radius: 50px; font-weight: bold; cursor: pointer; font-size: 1.1rem; margin-top: 20px; z-index: 10001; }
+        .v-selector { display: flex; gap: 10px; margin: 15px 0; z-index: 10001; }
+        .v-btn { padding: 8px 15px; border: 1px solid var(--gold); background: transparent; color: white; border-radius: 5px; cursor: pointer; }
+        .v-btn.active { background: var(--gold); color: black; }
+    </style>
+</head>
+<body>
+
+    <div id="splash">
+        <h1 style="color: var(--gold);">ممشى بلدة الهجر</h1>
+        <p style="color:white;">استكشف الـ 3 كم بتقنية الواقع المعزز</p>
+        <div class="v-selector">
+            <button class="v-btn active" id="fBtn" onclick="setGender('female')">👩 أنثى</button>
+            <button class="v-btn" id="mBtn" onclick="setGender('male')">👨 ذكر</button>
+        </div>
+        <button class="btn-main" onclick="initApp()">ابدأ الكاميرا</button>
+    </div>
+
+    <div id="mini-map"><div id="user-dot"></div></div>
+
+    <div id="info-card">
+        <h3 id="poi-title" style="margin:0; color:var(--gold);"></h3>
+        <p id="poi-desc" style="font-size:0.9rem; margin:10px 0;"></p>
+    </div>
+
+    <a-scene 
+        vr-mode-ui="enabled: false"
+        renderer="logarithmicDepthBuffer: true; precision: medium;"
+        embedded
+        arjs="sourceType: webcam; debugUIEnabled: false; detectionMode: mono_and_matrix; matrixCodeType: 3x3;">
+        
+        <a-camera gps-camera rotation-reader minDistance="5" maxDistance="500"></a-camera>
+    </a-scene>
+
+    <script>
+        // --- البيانات ---
+        const rawPath = [
+            {lat: 23.239322, lng: 56.516584}, 
+            {lat: 23.239276, lng: 56.516644},
+            {lat: 23.239167, lng: 56.516752},
+            {lat: 23.239074, lng: 56.516854}
+        ].reverse();
+
+        const bounds = { n: 23.240, s: 23.238, e: 56.518, w: 56.515 };
+        
+        const landmarks = [
+            { id: "palm", title: "نخلة الفرض", desc: "رمز الزراعة.", lat: 23.239276, lng: 56.516644 },
+            { id: "falaj", title: "فلج الرحبة", desc: "شريان الحياة.", lat: 23.239167, lng: 56.516752 }
+        ];
+
+        let selectedGender = 'female';
+        let activePOI = null;
+
+        function setGender(g) {
+            selectedGender = g;
+            document.getElementById('fBtn').classList.toggle('active', g === 'female');
+            document.getElementById('mBtn').classList.toggle('active', g === 'male');
+        }
+
+        function initApp() {
+            // طلب إذن الصوت
+            speak("جاري تشغيل النظام");
+            document.getElementById('splash').style.display = 'none';
+            document.getElementById('mini-map').style.display = 'block';
+            
+            // تأخير بسيط للتأكد من تحميل الكاميرا
+            setTimeout(() => {
+                renderARElements();
+                startTracking();
+            }, 1000);
+        }
+
+        function speak(text) {
+            if ('speechSynthesis' in window) {
+                const u = new SpeechSynthesisUtterance(text);
+                u.lang = 'ar-SA'; u.rate = 0.9;
+                const voices = window.speechSynthesis.getVoices();
+                const v = voices.find(vo => vo.lang.includes('ar') && vo.name.toLowerCase().includes(selectedGender));
+                if (v) u.voice = v;
+                window.speechSynthesis.speak(u);
+            }
+        }
+
+        function renderARElements() {
+            const scene = document.querySelector('a-scene');
+            
+            rawPath.forEach(pt => {
+                const dot = document.createElement('a-entity');
+                dot.setAttribute('gps-entity-place', `latitude: ${pt.lat}; longitude: ${pt.lng};`);
+                // تم تكبير النقاط قليلاً لتراها بوضوح
+                dot.innerHTML = `<a-sphere radius="0.5" color="#ffd700" material="emissive: #ffd700; emissiveIntensity: 2"></a-sphere>`;
+                scene.appendChild(dot);
+            });
+
+            // الأسهم (تم رفعها للأعلى قليلاً لتظهر بوضوح)
+            rawPath.forEach((pt, i) => {
+                if (i % 5 === 0 && i < rawPath.length - 1) {
+                    const arrow = document.createElement('a-entity');
+                    arrow.setAttribute('gps-entity-place', `latitude: ${pt.lat}; longitude: ${pt.lng};`);
+                    arrow.setAttribute('look-at', { latitude: rawPath[i+1].lat, longitude: rawPath[i+1].lng });
+                    arrow.innerHTML = `<a-triangle color="gold" scale="3 3 3" rotation="-90 0 0" position="0 2 0" animation="property: position; to: 0 3 0; dir: alternate; loop: true"></a-triangle>`;
+                    scene.appendChild(arrow);
+                }
+            });
+        }
+
+        function startTracking() {
+            navigator.geolocation.watchPosition(pos => {
+                const { latitude, longitude } = pos.coords;
+                // تحديث الرادار
+                const x = ((longitude - bounds.w) / (bounds.e - bounds.w)) * 100;
+                const y = ((bounds.n - latitude) / (bounds.n - bounds.s)) * 100;
+                
+                // التأكد من أن النقطة لا تخرج عن الدائرة
+                const safeX = Math.min(Math.max(x, 0), 100);
+                const safeY = Math.min(Math.max(y, 0), 100);
+                
+                document.getElementById('user-dot').style.left = safeX + '%';
+                document.getElementById('user-dot').style.top = safeY + '%';
+
+            }, (err) => {
+                console.error("GPS Error", err);
+            }, { enableHighAccuracy: true, maximumAge: 0, timeout: 27000 });
+        }
+    </script>
+</body>
+</html>
         .v-btn { padding: 8px 15px; border: 1px solid var(--gold); background: transparent; color: white; border-radius: 5px; cursor: pointer; }
         .v-btn.active { background: var(--gold); color: black; }
     </style>
