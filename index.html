@@ -3,210 +3,224 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>ممشى الهجر الذكي | الإصدار الثابت</title>
+    <title>ممشى الهجر | المسار الرسمي</title>
     
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
-    
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700&display=swap" rel="stylesheet">
     <script src="https://aframe.io/releases/1.3.0/aframe.min.js"></script>
     <script src="https://unpkg.com/aframe-look-at-component@0.8.0/dist/aframe-look-at-component.min.js"></script>
     <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar-nft.js"></script>
     
     <style>
-        /* --- الأساسيات: شفافية مطلقة للكاميرا --- */
-        body, html {
-            margin: 0; padding: 0; height: 100%; width: 100%;
-            font-family: 'Cairo', sans-serif;
-            background-color: transparent !important; /* هام جداً: إزالة اللون الأسود */
-            overflow: hidden;
+        /* إعدادات الشاشة */
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        html, body {
+            width: 100%; height: 100%; margin: 0; padding: 0;
+            overflow: hidden; position: fixed; font-family: 'Tajawal', sans-serif;
+            background: #000;
         }
 
-        /* --- طبقات العرض (Z-Index Stack) --- */
-        /* 1. الكاميرا (في الخلفية تماماً) */
-        #arjs-video {
-            position: fixed !important; top: 0; left: 0;
+        /* الكاميرا */
+        #arjs-video, .a-canvas {
+            position: absolute !important; top: 0; left: 0;
             width: 100% !important; height: 100% !important;
-            z-index: -2 !important; object-fit: cover !important;
-            display: block !important;
-        }
-        
-        /* 2. العناصر ثلاثية الأبعاد (فوق الكاميرا) */
-        .a-canvas {
-            position: fixed !important; top: 0; left: 0;
-            z-index: -1 !important;
+            z-index: 0 !important; object-fit: cover !important;
+            pointer-events: none;
         }
 
-        /* 3. واجهة المستخدم (فوق الجميع) */
-        #ui-layer {
+        /* شاشة البداية */
+        #splash {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            z-index: 100; pointer-events: none; /* يسمح باللمس عبر الفراغات */
+            background: linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.8)), url('https://images.unsplash.com/photo-1578895210405-927f05f3c8b0?q=80&w=1000');
+            background-size: cover; background-position: center;
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            color: white; z-index: 9999; transition: opacity 0.5s; text-align: center;
         }
 
-        /* --- شاشة البداية --- */
-        #splash-screen {
+        .title { font-size: 2rem; font-weight: bold; margin-bottom: 10px; text-shadow: 0 2px 5px rgba(0,0,0,0.5); }
+        .subtitle { font-size: 1rem; opacity: 0.9; margin-bottom: 30px; max-width: 80%; }
+
+        .btn {
+            padding: 15px 50px; background: white; color: #222;
+            border: none; border-radius: 50px; font-weight: bold; font-size: 1.1rem;
+            cursor: pointer; box-shadow: 0 5px 20px rgba(0,0,0,0.3);
+        }
+
+        /* واجهة اللعب HUD */
+        #hud {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: linear-gradient(rgba(0,30,0,0.9), rgba(0,0,0,0.95)), url('https://images.unsplash.com/photo-1545231027-637d2f6210f8?w=800');
-            background-size: cover; display: flex; flex-direction: column;
-            justify-content: center; align-items: center; z-index: 999;
-            color: #DAA520; text-align: center; padding: 20px;
-            pointer-events: auto; transition: opacity 0.5s;
+            pointer-events: none; z-index: 100; display: none;
         }
 
-        .gold-text { color: #DAA520; text-shadow: 0 2px 4px rgba(0,0,0,0.8); }
-        .white-text { color: #f0f0f0; font-size: 1.1rem; line-height: 1.6; margin-bottom: 30px; }
-
-        .start-btn {
-            background: linear-gradient(45deg, #DAA520, #F0E68C);
-            color: #000; border: none; padding: 15px 60px;
-            border-radius: 50px; font-weight: bold; font-size: 1.2rem;
-            cursor: pointer; box-shadow: 0 0 20px rgba(218, 165, 32, 0.5);
-            font-family: 'Cairo', sans-serif;
+        .hud-box {
+            position: absolute; background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(8px); border: 1px solid rgba(255,255,255,0.3);
+            border-radius: 15px; color: white; font-weight: bold;
+            display: flex; align-items: center; gap: 10px; pointer-events: auto;
         }
 
-        /* --- التوقيع --- */
-        .dev-signature {
-            position: absolute; bottom: 20px;
-            font-size: 0.9rem; color: #DAA520; opacity: 0.8;
-            border-top: 1px solid #DAA520; padding-top: 10px; width: 80%;
-        }
-
-        /* --- الرادار وعداد الذهب --- */
-        .hud-item {
-            position: absolute; background: rgba(0, 20, 0, 0.6);
-            border: 1px solid #DAA520; backdrop-filter: blur(4px);
-            border-radius: 15px; pointer-events: auto;
-        }
+        #score-panel { top: 20px; right: 20px; padding: 8px 20px; }
         
-        #score-box { top: 20px; left: 20px; padding: 8px 15px; color: #DAA520; font-weight: bold; }
-        
-        #radar {
-            top: 20px; right: 20px; width: 100px; height: 100px;
+        #radar-panel {
+            top: 20px; left: 20px; width: 90px; height: 90px;
             border-radius: 50%; overflow: hidden; background: rgba(0,0,0,0.5);
         }
         #radar-dot {
-            width: 8px; height: 8px; background: red; border-radius: 50%;
-            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-            box-shadow: 0 0 5px white;
+            width: 10px; height: 10px; background: #00FF00; border-radius: 50%;
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%);
+            box-shadow: 0 0 5px #00FF00; border: 2px solid white;
         }
 
-        /* --- صندوق الأخطاء (للتشخيص) --- */
-        #debug-console {
-            position: fixed; bottom: 0; left: 0; width: 100%; 
-            background: rgba(255,0,0,0.8); color: white; 
-            padding: 10px; font-size: 12px; display: none; z-index: 2000;
+        .signature { position: absolute; bottom: 20px; font-size: 0.8rem; opacity: 0.8; }
+        
+        /* رسالة انتظار GPS */
+        #gps-status {
+            position: fixed; bottom: 100px; left: 50%; transform: translateX(-50%);
+            background: rgba(0,0,0,0.7); color: white; padding: 5px 15px;
+            border-radius: 20px; font-size: 0.8rem; display: none;
         }
     </style>
 </head>
 
 <body>
 
-    <div id="splash-screen">
-        <h1 class="gold-text" style="font-size: 2.5rem;">ممشى بلدة الهجر</h1>
-        <p class="white-text" style="max-width: 500px;">
-            تجربة سياحية تفاعلية تمزج بين عراقة الماضي وتقنية المستقبل.
-            <br>استكشف المسار، واجمع الكنوز.
-        </p>
-        
-        <button class="start-btn" onclick="startExperience()">ابدأ الجولة</button>
-        
-        <div class="dev-signature">
-            تصميم وتطوير: المهندس سامي
-        </div>
+    <div id="splash">
+        <h1 class="title">ممشى بلدة الهجر</h1>
+        <p class="subtitle">المسار الرسمي (Real Path)<br>استكشف الطبيعة واجمع النقاط</p>
+        <button class="btn" onclick="startApp()">ابدأ الرحلة</button>
+        <div class="signature">تطوير: المهندس سامي</div>
     </div>
 
-    <div id="ui-layer" style="display:none;">
-        <div id="score-box" class="hud-item">💰 الرصيد: <span id="score">0</span></div>
-        <div id="radar" class="hud-item"><div id="radar-dot"></div></div>
+    <div id="hud">
+        <div id="score-panel" class="hud-box">النقاط: <span id="score">0</span></div>
+        <div id="radar-panel" class="hud-box"><div id="radar-dot"></div></div>
     </div>
-
-    <div id="debug-console"></div>
+    
+    <div id="gps-status">جاري البحث عن إشارة GPS...</div>
 
     <a-scene
         vr-mode-ui="enabled: false"
         embedded
-        arjs="sourceType: webcam; debugUIEnabled: false; detectionMode: mono_and_matrix;"
-        renderer="logarithmicDepthBuffer: true; precision: medium; alpha: true;">
+        renderer="logarithmicDepthBuffer: true; precision: high; antialias: true; alpha: true;"
+        arjs="sourceType: webcam; debugUIEnabled: false; detectionMode: mono_and_matrix;">
         
-        <a-camera gps-camera rotation-reader minDistance="5" maxDistance="1000">
-        </a-camera>
-        
-        <a-entity id="test-sphere" position="0 0 -5" geometry="primitive: sphere; radius: 0.5" material="color: red"></a-entity>
-
+        <a-camera gps-camera rotation-reader minDistance="1" maxDistance="1500"></a-camera>
     </a-scene>
 
     <script>
-        // --- البيانات ---
-        const pathPoints = [
-            {lat: 23.280610, lng: 56.926040}, {lat: 23.280598, lng: 56.926108},
-            {lat: 23.280586, lng: 56.926203}, {lat: 23.280566, lng: 56.926310},
-            {lat: 23.280526, lng: 56.926345}, {lat: 23.280486, lng: 56.926390},
-            {lat: 23.280431, lng: 56.926496}, {lat: 23.280436, lng: 56.926543},
-            {lat: 23.280426, lng: 56.926606}, {lat: 23.280415, lng: 56.926705}
-        ];
+        // --- 1. بيانات المسار الحقيقية (من ملف GeoJSON الخاص بك) ---
+        // قمت بوضع البيانات هنا مباشرة لتعمل بدون مشاكل تحميل
+        const geoJsonData = {
+            "type": "FeatureCollection",
+            "features": [{
+                "geometry": {
+                    "type": "LineString",
+                    "coordinates": [
+                        [56.92604, 23.28061], [56.926055, 23.28060667], [56.92609667, 23.2806],
+                        [56.92610833, 23.28059833], [56.92613833, 23.280595], [56.92616333, 23.28059333],
+                        [56.926185, 23.28059], [56.92620333, 23.28058667], [56.926225, 23.28058667],
+                        [56.92623667, 23.28058333], [56.92625833, 23.28057333], [56.92627833, 23.28056833],
+                        [56.92631, 23.28056667], [56.92632333, 23.28055667], [56.926345, 23.28052667],
+                        [56.92635667, 23.28051], [56.92639, 23.28048667], [56.92641, 23.280475],
+                        [56.92644167, 23.28045667], [56.92646667, 23.280445], [56.92649667, 23.28043167],
+                        [56.92652167, 23.28043167], [56.92654333, 23.28043667], [56.92657333, 23.28043667],
+                        [56.92660667, 23.28042667], [56.92663167, 23.280425], [56.92666333, 23.28042333],
+                        [56.926705, 23.280415], [56.92688333, 23.28036833], [56.92698833, 23.28032],
+                        [56.92706, 23.28027833], [56.92713333, 23.28024833], [56.92781833, 23.28017],
+                        [56.92825333, 23.28005], [56.92899, 23.27985], [56.92970333, 23.2796],
+                        [56.9303, 23.27927], [56.931495, 23.27887], [56.93247833, 23.27845]
+                    ]
+                }
+            }]
+        };
+
+        // حدود منطقة الهجر (للخريطة المصغرة)
         const bounds = { n: 23.2810, s: 23.2780, e: 56.9330, w: 56.9250 };
         
         let score = 0;
+        let isStarted = false;
 
-        function logError(msg) {
-            const consoleDiv = document.getElementById('debug-console');
-            consoleDiv.style.display = 'block';
-            consoleDiv.innerText = "تنبيه: " + msg;
-        }
+        function startApp() {
+            if(isStarted) return;
+            isStarted = true;
 
-        function startExperience() {
-            // إخفاء شاشة البداية
-            const splash = document.getElementById('splash-screen');
+            const splash = document.getElementById('splash');
             splash.style.opacity = '0';
-            setTimeout(() => { splash.style.display = 'none'; }, 500);
+            setTimeout(() => {
+                splash.style.display = 'none';
+                document.getElementById('hud').style.display = 'block';
+                document.getElementById('gps-status').style.display = 'block';
+            }, 500);
+
+            initPathFromGeoJSON();
+            startGPSMonitoring();
             
-            // إظهار الواجهة
-            document.getElementById('ui-layer').style.display = 'block';
-            
-            // تهيئة المشهد
-            initScene();
-            
-            // تشغيل الصوت (يحتاج تفاعل المستخدم)
-            speak("مرحباً بك في ممشى الهجر. الكاميرا تعمل الآن، ابحث عن الذهب.");
+            speak("أهلاً بك في ممشى الهجر. اتبع النقاط البيضاء.");
         }
 
-        function initScene() {
+        // --- معالجة ملف GeoJSON ورسم المسار ---
+        function initPathFromGeoJSON() {
             const scene = document.querySelector('a-scene');
-            
-            // رسم المسار
-            pathPoints.forEach((pt, i) => {
+            const coordinates = geoJsonData.features[0].geometry.coordinates;
+
+            // GeoJSON يأتي بصيغة [Longitude, Latitude]
+            // AR.js يحتاج latitude ثم longitude
+
+            coordinates.forEach((coord, index) => {
+                // الفلترة: لا نرسم كل نقطة، نرسم نقطة واحدة كل 3 نقاط لتخفيف الحمل
+                // (إلا إذا كانت نقطة انعطاف مهمة)
+                if (index % 3 !== 0 && index !== coordinates.length - 1) return;
+
+                const lng = coord[0];
+                const lat = coord[1];
+
+                // 1. رسم نقطة المسار (بيضاء)
                 const dot = document.createElement('a-entity');
-                dot.setAttribute('gps-entity-place', `latitude: ${pt.lat}; longitude: ${pt.lng};`);
-                dot.innerHTML = `<a-sphere radius="0.5" color="#DAA520" material="emissive: #DAA520; emissiveIntensity: 2"></a-sphere>`;
+                dot.setAttribute('gps-entity-place', `latitude: ${lat}; longitude: ${lng};`);
+                dot.innerHTML = `<a-sphere radius="0.4" color="white" material="opacity: 0.9; shader: flat"></a-sphere>`;
                 scene.appendChild(dot);
-                
-                // إضافة قطع ذهبية للجمع
-                if (i % 2 === 0) {
+
+                // 2. وضع الذهب (كل 10 نقاط)
+                if (index % 10 === 0) {
                     const coin = document.createElement('a-entity');
-                    coin.setAttribute('gps-entity-place', `latitude: ${pt.lat + 0.00002}; longitude: ${pt.lng};`);
-                    coin.innerHTML = `<a-octahedron radius="0.3" color="#FFD700" animation="property: rotation; to: 0 360 0; loop: true; dur: 3000"></a-octahedron>`;
+                    // نضع الذهب بجانب المسار قليلاً
+                    coin.setAttribute('gps-entity-place', `latitude: ${lat}; longitude: ${lng};`);
+                    // رفع الذهب للأعلى قليلاً (position y=1)
+                    coin.innerHTML = `<a-octahedron radius="0.5" position="0 1 0" color="#FFD700" 
+                        animation="property: rotation; to: 0 360 0; loop: true; dur: 3000"
+                        material="metalness: 1; roughness: 0"></a-octahedron>`;
+                    
                     coin.addEventListener('click', () => {
-                        coin.setAttribute('visible', 'false');
-                        score += 10;
-                        document.getElementById('score').innerText = score;
-                        speak("جميل! وجدت قطعة ذهبية");
+                        if(coin.getAttribute('visible') !== 'false') {
+                            coin.setAttribute('visible', 'false');
+                            score += 25;
+                            document.getElementById('score').innerText = score;
+                            speak("أحسنت");
+                        }
                     });
                     scene.appendChild(coin);
                 }
             });
-
-            // بدء تتبع الموقع
-            navigator.geolocation.watchPosition(updateRadar, 
-                (err) => logError("فشل تحديد الموقع. تأكد من تفعيل GPS."), 
-                { enableHighAccuracy: true, maximumAge: 0 }
-            );
         }
 
-        function updateRadar(pos) {
-            const { latitude, longitude } = pos.coords;
-            const y = ((bounds.n - latitude) / (bounds.n - bounds.s)) * 100;
-            const x = ((longitude - bounds.w) / (bounds.e - bounds.w)) * 100;
-            const dot = document.getElementById('radar-dot');
-            dot.style.top = Math.min(Math.max(y, 5), 95) + '%';
-            dot.style.left = Math.min(Math.max(x, 5), 95) + '%';
+        // --- مراقبة الموقع والرادار ---
+        function startGPSMonitoring() {
+            navigator.geolocation.watchPosition(pos => {
+                document.getElementById('gps-status').style.display = 'none'; // إخفاء رسالة البحث
+                
+                const lat = pos.coords.latitude;
+                const lng = pos.coords.longitude;
+                
+                // تحديث الرادار
+                const y = ((bounds.n - lat) / (bounds.n - bounds.s)) * 100;
+                const x = ((lng - bounds.w) / (bounds.e - bounds.w)) * 100;
+                
+                const dot = document.getElementById('radar-dot');
+                dot.style.top = Math.min(Math.max(y, 5), 95) + '%';
+                dot.style.left = Math.min(Math.max(x, 5), 95) + '%';
+
+            }, (err) => {
+                document.getElementById('gps-status').innerText = "تنبيه: إشارة GPS ضعيفة";
+            }, { enableHighAccuracy: true, maximumAge: 0 });
         }
 
         function speak(text) {
@@ -216,16 +230,8 @@
                 window.speechSynthesis.speak(u);
             }
         }
-
-        // --- إصلاح نهائي للكاميرا ---
-        // نتأكد أن الفيديو يأخذ حجم الشاشة ولا يختفي
-        window.addEventListener('arjs-video-loaded', (e) => {
-            const video = document.getElementById('arjs-video');
-            if (video) {
-                video.style.zIndex = "-2"; 
-                video.style.display = "block";
-            }
-        });
+        
+        window.addEventListener('resize', () => { document.querySelector('a-scene').resize(); });
     </script>
 </body>
 </html>
