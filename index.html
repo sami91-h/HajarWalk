@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>ممشى الهجر | المعرض الرقمي</title>
+    <title>ممشى الهجر | المهندس سامي</title>
     
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;500;800&display=swap" rel="stylesheet">
     
@@ -12,14 +12,37 @@
     <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar-nft.js"></script>
     
     <style>
-        /* --- التصميم السينمائي --- */
-        :root { --gold: #FFD700; --glass: rgba(20, 20, 20, 0.6); }
-        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-        body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: #000; font-family: 'Tajawal', sans-serif; }
-        
-        #arjs-video { width: 100% !important; height: 100% !important; object-fit: cover !important; position: absolute !important; top: 0; left: 0; z-index: 0 !important; }
-        .a-canvas { z-index: 1 !important; position: absolute !important; }
+        /* --- 1. الحل الجذري للمستطيل الأسود --- */
+        body, html {
+            margin: 0; padding: 0; width: 100%; height: 100%;
+            overflow: hidden; background: #000; font-family: 'Tajawal', sans-serif;
+        }
 
+        /* هذا الكود يجبر الفيديو أن يكون في المنتصف ويغطي الشاشة مهما كان حجمها */
+        #arjs-video {
+            position: absolute !important;
+            top: 50% !important;
+            left: 50% !important;
+            width: auto !important;
+            height: auto !important;
+            min-width: 100% !important;
+            min-height: 100% !important;
+            transform: translate(-50%, -50%) !important;
+            object-fit: cover !important;
+            z-index: -2 !important;
+            margin: 0 !important;
+        }
+        
+        /* طبقة الكانفاس تتبع نفس المنطق */
+        .a-canvas {
+            width: 100% !important; height: 100% !important;
+            position: absolute !important; top: 0; left: 0;
+            z-index: 1 !important;
+        }
+
+        /* --- 2. التصميم (نفس التصميم السابق) --- */
+        :root { --gold: #FFD700; --glass: rgba(20, 20, 20, 0.6); }
+        
         /* شاشة البداية */
         #splash {
             position: fixed; inset: 0;
@@ -28,7 +51,7 @@
         }
         .btn { background: var(--gold); color: #000; border: none; padding: 18px; width: 100%; border-radius: 24px; font-size: 1.2rem; font-weight: bold; cursor: pointer; box-shadow: 0 0 30px rgba(255, 215, 0, 0.4); }
 
-        /* التنبيهات المنبثقة للصور */
+        /* التنبيهات */
         #notification {
             position: fixed; top: 100px; left: 50%; transform: translateX(-50%);
             background: rgba(0, 0, 0, 0.8); border: 1px solid var(--gold);
@@ -36,7 +59,7 @@
             font-weight: bold; display: none; z-index: 200; animation: popIn 0.5s;
         }
 
-        /* واجهة اللعب */
+        /* الواجهة */
         #hud { position: fixed; inset: 0; pointer-events: none; z-index: 100; display: none; padding: 20px; }
         .radar { width: 80px; height: 80px; border-radius: 50%; background: var(--glass); border: 2px solid rgba(255,255,255,0.2); position: relative; overflow: hidden; }
         #radar-dot { width: 10px; height: 10px; background: #0f0; border-radius: 50%; position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); }
@@ -61,12 +84,37 @@
         <div class="footer">تطوير: المهندس سامي</div>
     </div>
 
-    <a-scene vr-mode-ui="enabled: false" embedded arjs="sourceType: webcam; debugUIEnabled: false;" renderer="logarithmicDepthBuffer: true; precision: high; antialias: true; alpha: true;">
+    <a-scene 
+        vr-mode-ui="enabled: false" 
+        embedded 
+        arjs="sourceType: webcam; debugUIEnabled: false; videoTexture: true;" 
+        renderer="logarithmicDepthBuffer: true; precision: high; antialias: true; alpha: true;">
+        
         <a-camera gps-camera rotation-reader minDistance="1" maxDistance="2000"></a-camera>
     </a-scene>
 
     <script>
-        // بيانات المسار الحقيقية
+        // --- دالة إصلاح الشاشة السوداء برمجياً ---
+        // يتم استدعاؤها فور تحميل الصفحة وعند تدوير الشاشة
+        function fixVideoSize() {
+            const video = document.getElementById('arjs-video');
+            if (video) {
+                // إجبار الفيديو على تجاوز حدود الشاشة ليتم قصه وتغطية الفراغات
+                video.style.minWidth = "100vw";
+                video.style.minHeight = "100vh";
+                video.style.width = "auto";
+                video.style.height = "auto";
+                video.style.top = "50%";
+                video.style.left = "50%";
+                video.style.transform = "translate(-50%, -50%)";
+            }
+        }
+        window.addEventListener('resize', fixVideoSize);
+        window.addEventListener('load', fixVideoSize);
+
+        // --- بقية الكود (البيانات والمنطق) ---
+        
+        // تم استخراج البيانات من ملف GeoJSON الذي رفعته
         const pathCoords = [
             [56.92604, 23.28061], [56.92609, 23.2806], [56.92613, 23.28059], 
             [56.92620, 23.28058], [56.92625, 23.28057], [56.92631, 23.28056],
@@ -78,28 +126,31 @@
             [56.93030, 23.27927], [56.93149, 23.27887], [56.93247, 23.27845]
         ];
 
-        // صور للعرض (يمكنك استبدال الروابط بصورك الخاصة)
         const galleryImages = [
-            "https://images.unsplash.com/photo-1545231027-637d2f6210f8?w=500", // نخيل
-            "https://images.unsplash.com/photo-1596524430615-b46475ddff6e?w=500", // فلج
-            "https://images.unsplash.com/photo-1578895210405-927f05f3c8b0?w=500"  // جبال
+            "https://images.unsplash.com/photo-1545231027-637d2f6210f8?w=500", 
+            "https://images.unsplash.com/photo-1596524430615-b46475ddff6e?w=500", 
+            "https://images.unsplash.com/photo-1578895210405-927f05f3c8b0?w=500" 
         ];
 
         async function startExp() {
             try {
+                // طلب الكاميرا وانتظار التشغيل
                 await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
                 
-                // تحميل الأصوات مسبقاً
-                if ('speechSynthesis' in window) {
-                    window.speechSynthesis.getVoices();
-                }
-
                 document.getElementById('splash').style.display = 'none';
                 document.getElementById('hud').style.display = 'block';
+                
                 initAR();
                 startTracking();
+                
+                // تطبيق إصلاح الشاشة مرة أخرى للتأكيد
+                setTimeout(fixVideoSize, 500);
+                setTimeout(fixVideoSize, 2000);
+                
                 speak("يا هلا ومرحبا فيك في ممشى الهجر. اتبع الخط الأرضي المتوهج.");
-            } catch (e) { alert("يرجى السماح للكاميرا"); }
+            } catch (e) { 
+                alert("يرجى السماح للكاميرا"); 
+            }
         }
 
         function initAR() {
@@ -108,13 +159,13 @@
             pathCoords.forEach((pt, i) => {
                 const [lng, lat] = pt;
 
-                // 1. الخط الأرضي المتوهج (سجادة ضوئية)
+                // الخط الأرضي
                 const floorDot = document.createElement('a-entity');
                 floorDot.setAttribute('gps-entity-place', `latitude: ${lat}; longitude: ${lng};`);
                 floorDot.innerHTML = `<a-circle radius="0.8" color="#FFD700" rotation="-90 0 0" material="opacity: 0.6; transparent: true; shader: flat"></a-circle>`;
                 scene.appendChild(floorDot);
 
-                // 2. صور عشوائية
+                // الصور
                 if (i > 0 && i % 6 === 0) {
                     const imgIndex = (i / 6) % galleryImages.length;
                     createARImage(lat, lng, galleryImages[imgIndex], scene, i);
@@ -131,7 +182,6 @@
             container.setAttribute('class', 'ar-image-marker');
             container.setAttribute('data-lat', lat);
             container.setAttribute('data-lng', lng);
-            container.setAttribute('data-id', id);
 
             container.innerHTML = `
                 <a-image src="${imgSrc}" width="3" height="2" position="0 2 0"></a-image>
@@ -157,12 +207,10 @@
                     if (dist < 20 && marker.getAttribute('visible') === 'false') {
                         marker.setAttribute('visible', 'true');
                         marker.setAttribute('animation', 'property: scale; from: 0 0 0; to: 1 1 1; dur: 1000; easing: easeOutElastic');
-                        
                         showNotification();
                         speak("وصلت لمعلم تاريخي. شوف الصورة قدامك.");
                     }
                 });
-
             }, null, { enableHighAccuracy: true });
         }
 
@@ -177,13 +225,10 @@
 
         function getDistance(lat1, lon1, lat2, lon2) {
             const R = 6371e3; 
-            const φ1 = lat1 * Math.PI/180;
-            const φ2 = lat2 * Math.PI/180;
-            const Δφ = (lat2-lat1) * Math.PI/180;
-            const Δλ = (lon2-lon1) * Math.PI/180;
-            const a = Math.sin(Δφ/2) * Math.sin(Δφ/2) + Math.cos(φ1) * Math.cos(φ2) * Math.sin(Δλ/2) * Math.sin(Δλ/2);
-            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-            return R * c;
+            const dLat = (lat2-lat1) * Math.PI/180;
+            const dLon = (lon2-lon1) * Math.PI/180;
+            const a = Math.sin(dLat/2) * Math.sin(dLat/2) + Math.cos(lat1 * Math.PI/180) * Math.cos(lat2 * Math.PI/180) * Math.sin(dLon/2) * Math.sin(dLon/2);
+            return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
         }
 
         function showNotification() {
@@ -192,25 +237,16 @@
             setTimeout(() => { notif.style.display = 'none'; }, 4000);
         }
 
-        // --- دالة الصوت المحسنة (نبرة خليجية تقريبية) ---
         function speak(text) {
             if ('speechSynthesis' in window) {
-                // إيقاف أي صوت سابق
                 window.speechSynthesis.cancel();
-
                 const u = new SpeechSynthesisUtterance(text);
                 u.lang = 'ar-SA'; 
-                u.rate = 0.85; // إبطاء السرعة قليلاً للوقار
-                u.pitch = 0.9; // خفض الطبقة للصوت الذكوري
-
-                // محاولة اختيار صوت عربي جيد (مثل Maged أو Tariq)
+                u.rate = 0.85; 
+                u.pitch = 0.9; 
                 const voices = window.speechSynthesis.getVoices();
-                const arabicVoice = voices.find(v => v.lang.includes('ar') && (v.name.includes('Maged') || v.name.includes('Tariq') || v.name.includes('Google')));
-                
-                if (arabicVoice) {
-                    u.voice = arabicVoice;
-                }
-
+                const arabicVoice = voices.find(v => v.lang.includes('ar') && (v.name.includes('Maged') || v.name.includes('Tariq')));
+                if (arabicVoice) u.voice = arabicVoice;
                 window.speechSynthesis.speak(u);
             }
         }
