@@ -3,96 +3,71 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>ممشى الهجر | نيون</title>
+    <title>ممشى الهجر | المعرض الرقمي</title>
     
-    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;500;800&display=swap" rel="stylesheet">
     
     <script src="https://aframe.io/releases/1.3.0/aframe.min.js"></script>
     <script src="https://unpkg.com/aframe-look-at-component@0.8.0/dist/aframe-look-at-component.min.js"></script>
     <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar-nft.js"></script>
     
     <style>
-        /* --- تصميم عصري (Dark Mode / Neon) --- */
+        /* --- التصميم السينمائي --- */
+        :root { --gold: #FFD700; --glass: rgba(20, 20, 20, 0.6); }
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: #000; font-family: 'Tajawal', sans-serif; }
-
+        
         #arjs-video { width: 100% !important; height: 100% !important; object-fit: cover !important; position: absolute !important; top: 0; left: 0; z-index: 0 !important; }
-        .a-canvas { z-index: 1 !important; }
-
-        /* واجهة المستخدم */
-        #ui-layer { position: fixed; inset: 0; z-index: 100; pointer-events: none; display: flex; flex-direction: column; justify-content: space-between; padding: 20px; }
+        .a-canvas { z-index: 1 !important; position: absolute !important; }
 
         /* شاشة البداية */
         #splash {
-            position: absolute; inset: 0;
-            background: linear-gradient(180deg, rgba(0,0,0,0.6) 0%, #000000 100%), url('https://images.unsplash.com/photo-1550751827-4bd374c3f58b?q=80&w=1000');
-            background-size: cover; display: flex; flex-direction: column; justify-content: flex-end; padding: 40px; z-index: 999; color: white; transition: transform 0.6s ease-in-out;
+            position: fixed; inset: 0;
+            background: linear-gradient(to bottom, rgba(0,0,0,0.2), rgba(0,0,0,0.9)), url('https://images.unsplash.com/photo-1518531933037-91b2f5f229cc?q=80&w=1000');
+            background-size: cover; display: flex; flex-direction: column; justify-content: flex-end; padding: 30px; z-index: 9999; color: white; transition: 0.5s;
         }
+        .btn { background: var(--gold); color: #000; border: none; padding: 18px; width: 100%; border-radius: 24px; font-size: 1.2rem; font-weight: bold; cursor: pointer; box-shadow: 0 0 30px rgba(255, 215, 0, 0.4); }
 
-        h1 { font-size: 3rem; margin: 0; background: linear-gradient(90deg, #00f2ff, #00ff88); -webkit-background-clip: text; -webkit-text-fill-color: transparent; text-shadow: 0 0 20px rgba(0, 255, 136, 0.5); }
-        p { opacity: 0.8; margin-bottom: 30px; font-size: 1.1rem; }
-
-        .neon-btn {
-            background: transparent; color: #00ff88; border: 2px solid #00ff88;
-            padding: 15px; border-radius: 12px; font-weight: bold; font-size: 1.2rem;
-            width: 100%; cursor: pointer; box-shadow: 0 0 15px rgba(0, 255, 136, 0.2);
-            transition: all 0.3s; text-transform: uppercase; letter-spacing: 2px;
-        }
-        .neon-btn:active { background: #00ff88; color: black; box-shadow: 0 0 30px #00ff88; }
-
-        /* إشعارات الظهور */
+        /* التنبيهات المنبثقة للصور */
         #notification {
-            position: absolute; top: 100px; left: 50%; transform: translateX(-50%);
-            background: rgba(0, 0, 0, 0.7); border: 1px solid #00f2ff;
-            color: #00f2ff; padding: 10px 20px; border-radius: 50px;
-            font-size: 0.9rem; opacity: 0; transition: opacity 0.5s;
-            backdrop-filter: blur(5px);
+            position: fixed; top: 100px; left: 50%; transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.8); border: 1px solid var(--gold);
+            padding: 10px 20px; border-radius: 30px; color: var(--gold);
+            font-weight: bold; display: none; z-index: 200; animation: popIn 0.5s;
         }
 
-        .hud-element {
-            background: rgba(20, 20, 20, 0.6); backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 15px;
-            color: white; padding: 10px 15px; font-weight: bold; display: flex; align-items: center; gap: 10px;
-        }
+        /* واجهة اللعب */
+        #hud { position: fixed; inset: 0; pointer-events: none; z-index: 100; display: none; padding: 20px; }
+        .radar { width: 80px; height: 80px; border-radius: 50%; background: var(--glass); border: 2px solid rgba(255,255,255,0.2); position: relative; overflow: hidden; }
+        #radar-dot { width: 10px; height: 10px; background: #0f0; border-radius: 50%; position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); }
+        .footer { position: absolute; bottom: 30px; width: 100%; text-align: center; color: rgba(255,255,255,0.6); font-size: 0.8rem; }
+
+        @keyframes popIn { from { transform: translate(-50%, -20px); opacity: 0; } to { transform: translate(-50%, 0); opacity: 1; } }
     </style>
 </head>
 
 <body>
 
     <div id="splash">
-        <h1>NEON WALK</h1>
-        <p>ممشى الهجر: التجربة التفاعلية</p>
-        <button class="neon-btn" onclick="startExperience()">CONNECT SYSTEM</button>
+        <h1 style="font-size: 2.5rem; margin-bottom: 5px; color: var(--gold);">ممشى الهجر</h1>
+        <p style="opacity: 0.8; margin-bottom: 30px;">المسار المضيء & المعرض الافتراضي</p>
+        <button class="btn" onclick="startExp()">ابدأ الجولة 🚀</button>
     </div>
 
-    <div id="ui-layer" style="display:none;">
-        <div class="hud-element" style="align-self: flex-start;">
-            <div style="width:10px; height:10px; background:#00ff88; border-radius:50%; box-shadow:0 0 10px #00ff88;"></div>
-            نشط
-        </div>
-        <div id="notification">📸 تم اكتشاف معلم قريب!</div>
-        <div class="hud-element" style="align-self: center;">تطوير: م. سامي</div>
+    <div id="notification">📸 اكتشفت صورة تاريخية!</div>
+
+    <div id="hud">
+        <div class="radar"><div id="radar-dot"></div></div>
+        <div class="footer">تطوير: المهندس سامي</div>
     </div>
 
-    <a-scene
-        vr-mode-ui="enabled: false"
-        embedded
-        arjs="sourceType: webcam; debugUIEnabled: false; detectionMode: mono_and_matrix;"
-        renderer="logarithmicDepthBuffer: true; precision: high; antialias: true; alpha: true;">
-        
+    <a-scene vr-mode-ui="enabled: false" embedded arjs="sourceType: webcam; debugUIEnabled: false;" renderer="logarithmicDepthBuffer: true; precision: high; antialias: true; alpha: true;">
         <a-camera gps-camera rotation-reader minDistance="1" maxDistance="2000"></a-camera>
-        
-        <a-assets>
-            <img id="img1" src="https://images.unsplash.com/photo-1542359649-31e03cd4d909?w=500">
-            <img id="img2" src="https://images.unsplash.com/photo-1555400038-63f5ba517a47?w=500">
-            <img id="img3" src="https://images.unsplash.com/photo-1517705008128-161945c9148f?w=500">
-        </a-assets>
-
     </a-scene>
 
     <script>
-        // --- 1. المسار الحقيقي (GeoJSON) ---
-        const pathData = [
+        // بيانات المسار الحقيقية
+        const pathCoords = [
             [56.92604, 23.28061], [56.92609, 23.2806], [56.92613, 23.28059], 
             [56.92620, 23.28058], [56.92625, 23.28057], [56.92631, 23.28056],
             [56.92634, 23.28052], [56.92639, 23.28048], [56.92644, 23.28045],
@@ -103,154 +78,142 @@
             [56.93030, 23.27927], [56.93149, 23.27887], [56.93247, 23.27845]
         ];
 
-        // قائمة الصور والمواقع العشوائية
-        let surprisePoints = [];
+        // صور للعرض (يمكنك استبدال الروابط بصورك الخاصة)
+        const galleryImages = [
+            "https://images.unsplash.com/photo-1545231027-637d2f6210f8?w=500", // نخيل
+            "https://images.unsplash.com/photo-1596524430615-b46475ddff6e?w=500", // فلج
+            "https://images.unsplash.com/photo-1578895210405-927f05f3c8b0?w=500"  // جبال
+        ];
 
-        async function startExperience() {
-            // طلب الكاميرا
+        async function startExp() {
             try {
                 await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
                 
-                document.getElementById('splash').style.transform = 'translateY(-100%)';
-                setTimeout(() => {
-                    document.getElementById('splash').style.display = 'none';
-                    document.getElementById('ui-layer').style.display = 'flex';
-                    
-                    initNeonPath();
-                    generateRandomSurprises();
-                    startProximityCheck(); // تشغيل الرادار الذكي
-                    
-                    speak("تم تفعيل نظام المسار المتوهج. ابحث عن الصور المخفية.");
-                }, 600);
+                // تحميل الأصوات مسبقاً
+                if ('speechSynthesis' in window) {
+                    window.speechSynthesis.getVoices();
+                }
+
+                document.getElementById('splash').style.display = 'none';
+                document.getElementById('hud').style.display = 'block';
+                initAR();
+                startTracking();
+                speak("يا هلا ومرحبا فيك في ممشى الهجر. اتبع الخط الأرضي المتوهج.");
             } catch (e) { alert("يرجى السماح للكاميرا"); }
         }
 
-        // --- 2. رسم المسار المتوهج (Neon Line) ---
-        function initNeonPath() {
+        function initAR() {
             const scene = document.querySelector('a-scene');
             
-            pathData.forEach((pt, i) => {
-                // فلترة لتقليل النقاط وجعل الخط متصل بصرياً
-                if (i % 2 !== 0) return;
+            pathCoords.forEach((pt, i) => {
+                const [lng, lat] = pt;
 
-                const lng = pt[0];
-                const lat = pt[1];
+                // 1. الخط الأرضي المتوهج (سجادة ضوئية)
+                const floorDot = document.createElement('a-entity');
+                floorDot.setAttribute('gps-entity-place', `latitude: ${lat}; longitude: ${lng};`);
+                floorDot.innerHTML = `<a-circle radius="0.8" color="#FFD700" rotation="-90 0 0" material="opacity: 0.6; transparent: true; shader: flat"></a-circle>`;
+                scene.appendChild(floorDot);
 
-                const dot = document.createElement('a-entity');
-                dot.setAttribute('gps-entity-place', `latitude: ${lat}; longitude: ${lng};`);
-                
-                // تصميم "النيون": اسطوانة مضيئة بلون السيان (Cyan)
-                dot.innerHTML = `
-                    <a-cylinder height="0.1" radius="0.3" 
-                        material="color: #00f2ff; opacity: 0.6; transparent: true; emissive: #00f2ff; emissiveIntensity: 2"
-                        animation="property: material.opacity; to: 0.2; dir: alternate; dur: 1500; loop: true">
-                    </a-cylinder>
-                    <a-light type="point" intensity="0.5" distance="2" color="#00f2ff" position="0 0.5 0"></a-light>
-                `;
-                scene.appendChild(dot);
+                // 2. صور عشوائية
+                if (i > 0 && i % 6 === 0) {
+                    const imgIndex = (i / 6) % galleryImages.length;
+                    createARImage(lat, lng, galleryImages[imgIndex], scene, i);
+                }
             });
         }
 
-        // --- 3. توليد الصور العشوائية ---
-        function generateRandomSurprises() {
-            const scene = document.querySelector('a-scene');
-            const images = ['#img1', '#img2', '#img3'];
+        function createARImage(lat, lng, imgSrc, scene, id) {
+            const container = document.createElement('a-entity');
+            container.setAttribute('gps-entity-place', `latitude: ${lat}; longitude: ${lng};`);
+            container.setAttribute('look-at', '[gps-camera]'); 
             
-            // نختار 3 أماكن عشوائية على المسار
-            for(let k=0; k<3; k++) {
-                // اختيار موقع عشوائي من المسار (تجنب البداية والنهاية)
-                const randomIndex = Math.floor(Math.random() * (pathData.length - 2)) + 1;
-                const pt = pathData[randomIndex];
-                const imgID = images[k % images.length];
+            container.setAttribute('visible', 'false'); 
+            container.setAttribute('class', 'ar-image-marker');
+            container.setAttribute('data-lat', lat);
+            container.setAttribute('data-lng', lng);
+            container.setAttribute('data-id', id);
 
-                // إنشاء كيان الصورة (مخفي في البداية)
-                const entity = document.createElement('a-entity');
-                entity.setAttribute('gps-entity-place', `latitude: ${pt[1]}; longitude: ${pt[0]};`);
-                entity.setAttribute('id', `surprise-${k}`);
-                entity.setAttribute('data-triggered', 'false'); // لم يتم اكتشافه بعد
-                
-                // تصميم الصورة العصرية (إطار متوهج)
-                entity.innerHTML = `
-                    <a-image src="${imgID}" scale="0 0 0" position="0 2 0" look-at="[gps-camera]"
-                        animation__show="property: scale; to: 3 2 1; dur: 1000; startEvents: show"
-                        material="opacity: 0.9; alphaTest: 0.5">
-                    </a-image>
-                    <a-ring radius-inner="0.1" radius-outer="0.2" color="#00ff88" position="0 1 0"
-                        animation="property: scale; to: 5 5 5; dur: 2000; loop: true; easing: easeOutQuad"
-                        material="opacity: 0.5; transparent: true">
-                    </a-ring>
-                `;
-                
-                scene.appendChild(entity);
-                
-                // حفظ الموقع للمراقبة
-                surprisePoints.push({
-                    lat: pt[1],
-                    lng: pt[0],
-                    id: `surprise-${k}`,
-                    el: entity
-                });
-            }
+            container.innerHTML = `
+                <a-image src="${imgSrc}" width="3" height="2" position="0 2 0"></a-image>
+                <a-plane width="3.2" height="2.2" position="0 2 -0.1" color="black" material="opacity: 0.7"></a-plane>
+                <a-text value="معلم تاريخي" align="center" position="0 0.8 0" color="gold" scale="1.5 1.5 1.5"></a-text>
+            `;
+            
+            scene.appendChild(container);
         }
 
-        // --- 4. مراقبة المسافة (Proximity Trigger) ---
-        function startProximityCheck() {
+        function startTracking() {
             navigator.geolocation.watchPosition(pos => {
-                const myLat = pos.coords.latitude;
-                const myLng = pos.coords.longitude;
+                const userLat = pos.coords.latitude;
+                const userLng = pos.coords.longitude;
+                
+                updateRadar(userLat, userLng);
 
-                surprisePoints.forEach(poi => {
-                    const dist = getDistance(myLat, myLng, poi.lat, poi.lng);
-                    
-                    // إذا اقتربت لمسافة 15 متر ولم يتم تفعيلها من قبل
-                    if (dist < 15 && poi.el.getAttribute('data-triggered') === 'false') {
-                        triggerSurprise(poi);
+                document.querySelectorAll('.ar-image-marker').forEach(marker => {
+                    const mLat = parseFloat(marker.getAttribute('data-lat'));
+                    const mLng = parseFloat(marker.getAttribute('data-lng'));
+                    const dist = getDistance(userLat, userLng, mLat, mLng);
+
+                    if (dist < 20 && marker.getAttribute('visible') === 'false') {
+                        marker.setAttribute('visible', 'true');
+                        marker.setAttribute('animation', 'property: scale; from: 0 0 0; to: 1 1 1; dur: 1000; easing: easeOutElastic');
+                        
+                        showNotification();
+                        speak("وصلت لمعلم تاريخي. شوف الصورة قدامك.");
                     }
                 });
+
             }, null, { enableHighAccuracy: true });
         }
 
-        // --- 5. تفعيل المفاجأة (صوت + صورة) ---
-        function triggerSurprise(poi) {
-            // وضع علامة "تم الاكتشاف"
-            poi.el.setAttribute('data-triggered', 'true');
-            
-            // تشغيل أنيميشن ظهور الصورة
-            const imgEl = poi.el.querySelector('a-image');
-            imgEl.emit('show'); // تشغيل الـ animation المربوط بحدث show
-            
-            // إظهار إشعار
-            const notif = document.getElementById('notification');
-            notif.style.opacity = '1';
-            setTimeout(() => { notif.style.opacity = '0'; }, 3000);
-
-            // تشغيل الصوت التلقائي
-            speak("لقد اكتشفت محطة جديدة! انظر للصورة أمامك.");
+        function updateRadar(lat, lng) {
+            const bounds = { n: 23.2810, s: 23.2780, e: 56.9330, w: 56.9250 };
+            const y = ((bounds.n - lat) / (bounds.n - bounds.s)) * 100;
+            const x = ((lng - bounds.w) / (bounds.e - bounds.w)) * 100;
+            const dot = document.getElementById('radar-dot');
+            dot.style.top = Math.min(Math.max(y, 10), 90) + '%';
+            dot.style.left = Math.min(Math.max(x, 10), 90) + '%';
         }
 
-        // دالة حساب المسافة (Haversine Formula) بالمتر
         function getDistance(lat1, lon1, lat2, lon2) {
-            const R = 6371e3; // نصف قطر الأرض
+            const R = 6371e3; 
             const φ1 = lat1 * Math.PI/180;
             const φ2 = lat2 * Math.PI/180;
             const Δφ = (lat2-lat1) * Math.PI/180;
             const Δλ = (lon2-lon1) * Math.PI/180;
-            const a = Math.sin(Δφ/2) * Math.sin(Δφ/2) +
-                      Math.cos(φ1) * Math.cos(φ2) *
-                      Math.sin(Δλ/2) * Math.sin(Δλ/2);
+            const a = Math.sin(Δφ/2) * Math.sin(Δφ/2) + Math.cos(φ1) * Math.cos(φ2) * Math.sin(Δλ/2) * Math.sin(Δλ/2);
             const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
             return R * c;
         }
 
+        function showNotification() {
+            const notif = document.getElementById('notification');
+            notif.style.display = 'block';
+            setTimeout(() => { notif.style.display = 'none'; }, 4000);
+        }
+
+        // --- دالة الصوت المحسنة (نبرة خليجية تقريبية) ---
         function speak(text) {
             if ('speechSynthesis' in window) {
+                // إيقاف أي صوت سابق
+                window.speechSynthesis.cancel();
+
                 const u = new SpeechSynthesisUtterance(text);
-                u.lang = 'ar-SA';
+                u.lang = 'ar-SA'; 
+                u.rate = 0.85; // إبطاء السرعة قليلاً للوقار
+                u.pitch = 0.9; // خفض الطبقة للصوت الذكوري
+
+                // محاولة اختيار صوت عربي جيد (مثل Maged أو Tariq)
+                const voices = window.speechSynthesis.getVoices();
+                const arabicVoice = voices.find(v => v.lang.includes('ar') && (v.name.includes('Maged') || v.name.includes('Tariq') || v.name.includes('Google')));
+                
+                if (arabicVoice) {
+                    u.voice = arabicVoice;
+                }
+
                 window.speechSynthesis.speak(u);
             }
         }
-        
-        window.addEventListener('resize', () => { document.querySelector('a-scene').resize(); });
     </script>
 </body>
 </html>
