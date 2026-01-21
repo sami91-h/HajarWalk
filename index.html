@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ممشى بلدة الهجر الذكي</title>
+    <script src="https://aframe.io/releases/1.3.0/aframe.min.js"></script>
+    <script src="https://unpkg.com/aframe-look-at-component@0.8.0/dist/aframe-look-at-component.min.js"></script>
+    <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar-nft.js"></script>
+    
+    <style>
+        :root { --gold: #ffd700; --dark: rgba(0, 0, 0, 0.9); }
+        body { margin: 0; font-family: 'Segoe UI', sans-serif; overflow: hidden; background: #000; color: white; }
+        
+        /* واجهة البداية */
+        #splash {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(rgba(0,0,0,0.85), rgba(0,0,0,0.85)), url('https://images.unsplash.com/photo-1502472545331-106598379412?auto=format&fit=crop&w=1000');
+            background-size: cover; display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 5000; text-align: center; padding: 20px;
+        }
+
+        /* الرادار ومعلومات الزائر */
+        #mini-map { position: fixed; top: 20px; right: 20px; width: 120px; height: 120px; background: var(--dark); border: 2px solid var(--gold); border-radius: 50%; z-index: 1000; display: none; overflow: hidden; }
+        #user-dot { position: absolute; width: 10px; height: 10px; background: red; border-radius: 50%; transform: translate(-50%, -50%); top: 50%; left: 50%; z-index: 10; border: 2px solid white; }
+        
+        /* بطاقة المعلومات */
+        #info-card {
+            position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%) translateY(200%);
+            width: 85%; background: var(--dark); padding: 20px; border-radius: 20px;
+            z-index: 1000; transition: 0.5s; border-top: 4px solid var(--gold);
+        }
+        #info-card.active { transform: translateX(-50%) translateY(0); }
+
+        /* الأزرار */
+        .btn-main { padding: 15px 40px; background: var(--gold); border: none; border-radius: 50px; font-weight: bold; cursor: pointer; font-size: 1.1rem; margin-top: 20px; }
+        .v-selector { display: flex; gap: 10px; margin: 15px 0; }
+        .v-btn { padding: 8px 15px; border: 1px solid var(--gold); background: transparent; color: white; border-radius: 5px; cursor: pointer; }
+        .v-btn.active { background: var(--gold); color: black; }
+    </style>
+</head>
+<body>
+
+    <div id="splash">
+        <h1 style="color: var(--gold);">ممشى بلدة الهجر الذكي</h1>
+        <p style="max-width: 80%;">رحلة الـ 3 كيلومترات عبر الواقع المعزز.</p>
+        <div class="v-selector">
+            <button class="v-btn active" id="fBtn" onclick="setGender('female')">👩 أنثوي</button>
+            <button class="v-btn" id="mBtn" onclick="setGender('male')">👨 ذكوري</button>
+        </div>
+        <button class="btn-main" onclick="initApp()">ابدأ المغامرة</button>
+    </div>
+
+    <div id="mini-map"><div id="user-dot"></div></div>
+
+    <div id="info-card">
+        <h3 id="poi-title" style="margin:0; color:var(--gold);"></h3>
+        <p id="poi-desc" style="font-size:0.9rem; margin:10px 0;"></p>
+        <img id="poi-img" src="" style="width:100%; border-radius:10px; margin-top:10px; display:none;" onerror="this.style.display='none'">
+    </div>
+
+    <a-scene vr-mode-ui="enabled: false" embedded arjs="sourceType: webcam; debugUIEnabled: false;">
+        <a-camera gps-camera rotation-reader></a-camera>
+    </a-scene>
+
+    <script>
+        // --- البيانات ---
+        // 1. المسار المسجل (تم عكسه ليكون من البداية)
+        const rawPath = [
+            {lat: 23.239322, lng: 56.516584}, 
+            {lat: 23.239276, lng: 56.516644},
+            {lat: 23.239167, lng: 56.516752},
+            {lat: 23.239074, lng: 56.516854} 
+            // *ملاحظة للمهندس: أضف باقي نقاط الـ 3 كم هنا من ملف الـ GPX لاحقاً*
+        ].reverse();
+
+        // 2. حدود الخريطة (تقريبية لبلدة الهجر)
+        const bounds = { n: 23.240, s: 23.238, e: 56.518, w: 56.515 };
+        
+        // 3. المعالم (بدون روابط صور حالياً)
+        const landmarks = [
+            { id: "palm", title: "نخلة الفرض", desc: "رمز الزراعة في الهجر.", lat: 23.239276, lng: 56.516644 },
+            { id: "falaj", title: "فلج الرحبة", desc: "شريان الحياة المائي.", lat: 23.239167, lng: 56.516752 }
+        ];
+
+        let selectedGender = 'female';
+        let activePOI = null;
+
+        function setGender(g) {
+            selectedGender = g;
+            document.getElementById('fBtn').classList.toggle('active', g === 'female');
+            document.getElementById('mBtn').classList.toggle('active', g === 'male');
+        }
+
+        function initApp() {
+            speak("أهلاً بك في ممشى بلدة الهجر. اتبع النقاط الذهبية.");
+            document.getElementById('splash').style.display = 'none';
+            document.getElementById('mini-map').style.display = 'block';
+            
+            renderARElements();
+            startTracking();
+        }
+
+        function speak(text) {
+            const u = new SpeechSynthesisUtterance(text);
+            u.lang = 'ar-SA'; u.rate = 0.9;
+            const voices = window.speechSynthesis.getVoices();
+            const v = voices.find(vo => vo.lang.includes('ar') && vo.name.toLowerCase().includes(selectedGender));
+            if (v) u.voice = v;
+            window.speechSynthesis.speak(u);
+        }
+
+        function renderARElements() {
+            const scene = document.querySelector('a-scene');
+            
+            // رسم المسار
+            rawPath.forEach(pt => {
+                const dot = document.createElement('a-entity');
+                dot.setAttribute('gps-entity-place', `latitude: ${pt.lat}; longitude: ${pt.lng};`);
+                dot.innerHTML = `<a-sphere radius="0.15" color="#ffd700" material="emissive: #ffd700; emissiveIntensity: 2"></a-sphere>`;
+                scene.appendChild(dot);
+            });
+
+            // رسم الأسهم
+            rawPath.forEach((pt, i) => {
+                if (i % 5 === 0 && i < rawPath.length - 1) {
+                    const arrow = document.createElement('a-entity');
+                    arrow.setAttribute('gps-entity-place', `latitude: ${pt.lat}; longitude: ${pt.lng};`);
+                    arrow.setAttribute('look-at', { latitude: rawPath[i+1].lat, longitude: rawPath[i+1].lng });
+                    arrow.innerHTML = `<a-triangle color="gold" scale="2 2 2" rotation="-90 0 0" animation="property: position; to: 0 1 0; dir: alternate; loop: true"></a-triangle>`;
+                    scene.appendChild(arrow);
+                }
+            });
+
+            // رسم المعالم
+            landmarks.forEach(loc => {
+                const el = document.createElement('a-entity');
+                el.setAttribute('gps-entity-place', `latitude: ${loc.lat}; longitude: ${loc.lng};`);
+                el.setAttribute('look-at', '[gps-camera]');
+                el.innerHTML = `<a-text value="${loc.title}" align="center" color="gold" scale="15 15 15" position="0 4 0"></a-text>`;
+                scene.appendChild(el);
+            });
+        }
+
+        function startTracking() {
+            navigator.geolocation.watchPosition(pos => {
+                const { latitude, longitude } = pos.coords;
+                // تحديث الرادار
+                const x = ((longitude - bounds.w) / (bounds.e - bounds.w)) * 100;
+                const y = ((bounds.n - latitude) / (bounds.n - bounds.s)) * 100;
+                document.getElementById('user-dot').style.left = x + '%';
+                document.getElementById('user-dot').style.top = y + '%';
+
+                // تفعيل المعالم
+                landmarks.forEach(loc => {
+                    const d = getDist(latitude, longitude, loc.lat, loc.lng);
+                    if (d < 15 && activePOI !== loc.id) {
+                        activePOI = loc.id;
+                        document.getElementById('poi-title').innerText = loc.title;
+                        document.getElementById('poi-desc').innerText = loc.desc;
+                        document.getElementById('info-card').classList.add('active');
+                        speak(loc.title + ". " + loc.desc);
+                    }
+                });
+            }, null, { enableHighAccuracy: true });
+        }
+
+        function getDist(lat1, lon1, lat2, lon2) {
+            const R = 6371e3;
+            const dLat = (lat2-lat1) * Math.PI/180;
+            const dLon = (lon2-lon1) * Math.PI/180;
+            const a = Math.sin(dLat/2)**2 + Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLon/2)**2;
+            return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+        }
+    </script>
+</body>
+</html>
