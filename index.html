@@ -13,7 +13,7 @@
     <style>
         body, html { margin: 0; padding: 0; overflow: hidden; background-color: transparent !important; font-family: 'Tajawal', sans-serif; }
 
-        /* واجهة الزجاج العصرية */
+        /* === واجهة البداية (Glassmorphism) === */
         #intro-screen {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(12px);
@@ -25,11 +25,13 @@
         .content-box {
             background: rgba(255, 255, 255, 0.05); padding: 30px; border-radius: 30px;
             border: 1px solid rgba(255, 255, 255, 0.1); width: 85%; max-width: 400px;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
         }
 
-        h1 { color: #22d3ee; margin: 0 0 10px; font-size: 26px; }
+        h1 { color: #22d3ee; margin: 0 0 10px; font-size: 26px; text-shadow: 0 0 15px rgba(34, 211, 238, 0.4); }
         p { color: #cbd5e1; margin-bottom: 30px; font-size: 16px; line-height: 1.6; }
 
+        /* زر البدء */
         .start-btn {
             background: linear-gradient(135deg, #22d3ee 0%, #0ea5e9 100%);
             border: none; padding: 15px 60px; color: white; font-size: 18px; font-weight: bold;
@@ -38,29 +40,32 @@
         }
         .start-btn:active { transform: scale(0.95); }
 
-        /* الخريطة الذكية */
+        /* === الخريطة الذكية === */
         #smart-map {
             position: absolute; transition: all 1s cubic-bezier(0.68, -0.55, 0.27, 1.55);
             z-index: 10000; overflow: hidden; border: 2px solid #22d3ee; background-color: #0f172a;
             box-shadow: 0 0 15px rgba(34, 211, 238, 0.3);
         }
 
+        /* وضع البداية (كبير) */
         .map-initial {
             width: 220px; height: 220px; border-radius: 25px;
             margin-bottom: 25px; position: relative; display: block; margin-left: auto; margin-right: auto;
         }
 
+        /* وضع الجولة (صغير في الزاوية) */
         .map-corner {
-            width: 90px; height: 90px; border-radius: 50%;
-            top: 25px; left: 25px; border-width: 3px; opacity: 0.95;
+            width: 80px; height: 80px; border-radius: 50%;
+            top: 20px; left: 20px; border-width: 3px; opacity: 0.9;
         }
 
         .map-img { width: 100%; height: 100%; object-fit: cover; opacity: 0.8; }
 
+        /* النقطة الحمراء (مكان الزائر) */
         .user-dot {
             position: absolute; top: 50%; left: 50%; width: 12px; height: 12px;
             background-color: #ef4444; border-radius: 50%; transform: translate(-50%, -50%);
-            border: 2px solid white; box-shadow: 0 0 10px #ef4444; z-index: 2;
+            border: 2px solid white; z-index: 2;
         }
         .user-dot::after {
             content: ''; position: absolute; top: 50%; left: 50%; width: 100%; height: 100%;
@@ -84,8 +89,8 @@
     <div id="intro-screen">
         <div class="content-box">
             <div style="height: 240px;"></div> <h1>ممشى الهجر</h1>
-            <p>رحلة بين الطبيعة والسكينة.<br>استمتع بالمشي والتأمل.</p>
-            <button class="start-btn" onclick="startApp()">ابدأ</button>
+            <p>رحلة إيمانية ورياضية في قلب الطبيعة.<br>اكتشف المعالم وأنت تمشي.</p>
+            <button class="start-btn" onclick="startApp()">ابدأ الجولة</button>
             <div class="footer">تعديل وإنشاء: سامي السمري</div>
         </div>
     </div>
@@ -97,71 +102,77 @@
 
         <a-camera gps-camera rotation-reader far="3000"></a-camera>
 
+        <a-entity position="0 0 -4">
+             <a-cone color="#22d3ee" position="0 0.5 0" radius-bottom="0.2" radius-top="0" height="0.5" rotation="180 0 0" animation="property: position; to: 0 0.8 0; dir: alternate; dur: 1500; loop: true"></a-cone>
+             <a-text value="تجربة العرض" align="center" position="0 1.2 0" color="#22d3ee" scale="2 2 2"></a-text>
+        </a-entity>
+
+
         <a-entity gps-entity-place="latitude: 23.28061; longitude: 56.92604;">
             <a-image src="#img-welcome" scale="3 2 1" look-at="[gps-camera]" position="0 2.5 0"></a-image>
             <a-text value="بداية الممشى" color="#22d3ee" align="center" position="0 1 0" scale="2 2 2"></a-text>
         </a-entity>
 
-        <a-entity gps-entity-place="latitude: 23.280455; longitude: 56.926428;">
-            <a-entity position="0 0 0" rotation="-90 0 0" animation="property: position; to: 0 0.5 0; dir: alternate; dur: 1500; loop: true">
+        <a-entity gps-entity-place="latitude: 23.28023; longitude: 56.92740;">
+            <a-text value="سبحان الله وبحمده" look-at="[gps-camera]" position="0 4 0" scale="5 5 5" color="#fbbf24" align="center" font="kelsonsans"></a-text>
+            <a-text value="سبحان الله العظيم" look-at="[gps-camera]" position="0 3 0" scale="5 5 5" color="#fbbf24" align="center" font="kelsonsans"></a-text>
+            <a-sphere color="#fbbf24" radius="0.3" position="0 3.5 0" material="opacity: 0.4" animation="property: scale; to: 4 4 4; dir: alternate; dur: 2000; loop: true"></a-sphere>
+        </a-entity>
+
+        <a-entity gps-entity-place="latitude: 23.27988; longitude: 56.92882;">
+            <a-image src="#img-hadith" scale="4 3 1" look-at="[gps-camera]" position="0 2.5 0"></a-image>
+            <a-sound src="#audio-hadith" autoplay="false" distanceModel="exponential" maxDistance="15"></a-sound>
+        </a-entity>
+
+        <a-entity gps-entity-place="latitude: 23.28056; longitude: 56.92631;">
+             <a-entity position="0 0 0" rotation="-90 0 0" animation="property: position; to: 0 0.5 0; dir: alternate; dur: 1500; loop: true">
+                <a-triangle color="#22d3ee" vertex-a="0 0.5 0" vertex-b="-0.3 -0.3 0" vertex-c="0.3 -0.3 0"></a-triangle>
+            </a-entity>
+        </a-entity>
+
+        <a-entity gps-entity-place="latitude: 23.28036; longitude: 56.92690;">
+             <a-entity position="0 0 0" rotation="-90 0 0" animation="property: position; to: 0 0.5 0; dir: alternate; dur: 1500; loop: true">
+                <a-triangle color="#22d3ee" vertex-a="0 0.5 0" vertex-b="-0.3 -0.3 0" vertex-c="0.3 -0.3 0"></a-triangle>
+            </a-entity>
+        </a-entity>
+
+        <a-entity gps-entity-place="latitude: 23.27962; longitude: 56.92969;">
+             <a-entity position="0 0 0" rotation="-90 0 0" animation="property: position; to: 0 0.5 0; dir: alternate; dur: 1500; loop: true">
                 <a-triangle color="#22d3ee" vertex-a="0 0.5 0" vertex-b="-0.3 -0.3 0" vertex-c="0.3 -0.3 0"></a-triangle>
             </a-entity>
         </a-entity>
         
-        <a-entity gps-entity-place="latitude: 23.280363; longitude: 56.926905;">
-            <a-entity position="0 0 0" rotation="-90 0 0" animation="property: position; to: 0 0.5 0; dir: alternate; dur: 1500; loop: true">
-                <a-triangle color="#22d3ee" vertex-a="0 0.5 0" vertex-b="-0.3 -0.3 0" vertex-c="0.3 -0.3 0"></a-triangle>
-            </a-entity>
-        </a-entity>
-
-        <a-entity gps-entity-place="latitude: 23.280173; longitude: 56.92799;">
+        <a-entity gps-entity-place="latitude: 23.27885; longitude: 56.93137;">
              <a-entity position="0 0 0" rotation="-90 0 0" animation="property: position; to: 0 0.5 0; dir: alternate; dur: 1500; loop: true">
                 <a-triangle color="#22d3ee" vertex-a="0 0.5 0" vertex-b="-0.3 -0.3 0" vertex-c="0.3 -0.3 0"></a-triangle>
             </a-entity>
         </a-entity>
 
-        <a-entity gps-entity-place="latitude: 23.279621; longitude: 56.92969;">
-             <a-entity position="0 0 0" rotation="-90 0 0" animation="property: position; to: 0 0.5 0; dir: alternate; dur: 1500; loop: true">
-                <a-triangle color="#22d3ee" vertex-a="0 0.5 0" vertex-b="-0.3 -0.3 0" vertex-c="0.3 -0.3 0"></a-triangle>
-            </a-entity>
-        </a-entity>
-
-        <a-entity gps-entity-place="latitude: 23.280236; longitude: 56.927348;">
-            <a-text value="سبحان الله وبحمده" look-at="[gps-camera]" position="0 4 0" scale="4 4 4" color="#fbbf24" align="center" font="kelsonsans"></a-text>
-            <a-text value="سبحان الله العظيم" look-at="[gps-camera]" position="0 3 0" scale="4 4 4" color="#fbbf24" align="center" font="kelsonsans"></a-text>
-            <a-sphere color="#fbbf24" radius="0.2" position="0 3.5 0" material="opacity: 0.5" animation="property: scale; to: 3 3 3; dir: alternate; dur: 2000; loop: true"></a-sphere>
-        </a-entity>
-
-        <a-entity gps-entity-place="latitude: 23.279883; longitude: 56.92882;">
-            <a-image src="#img-hadith" scale="4 3 1" look-at="[gps-camera]" position="0 2.5 0"></a-image>
-            <a-sound src="#audio-hadith" autoplay="false" distanceModel="exponential" maxDistance="10"></a-sound>
-        </a-entity>
-
-
-        <a-entity gps-entity-place="latitude: 23.278428; longitude: 56.93257;">
+        <a-entity gps-entity-place="latitude: 23.27842; longitude: 56.93257;">
              <a-text value="الحمد لله على السلامة\nنهاية المسار" look-at="[gps-camera]" scale="6 6 6" position="0 5 0" color="#4ade80" align="center"></a-text>
+             <a-sphere color="#4ade80" radius="0.2" position="1 6 0" animation="property: position; to: 2 8 0; loop: true; dur: 1000"></a-sphere>
         </a-entity>
+
 
         <a-assets>
-            <img id="img-welcome" src="board_welcome.jpg">
-            <img id="img-hadith" src="board_hadith.jpg"> <audio id="audio-hadith" src="hadith_voice.mp3"></audio> </a-assets>
+            <img id="img-welcome" src="board_welcome.jpg"> <img id="img-hadith" src="board_hadith.jpg">   <audio id="audio-hadith" src="hadith_voice.mp3"></audio> </a-assets>
 
     </a-scene>
 
     <script>
         function startApp() {
-            // إخفاء الواجهة
+            // إخفاء واجهة البداية
             var intro = document.getElementById('intro-screen');
             intro.style.opacity = '0';
             setTimeout(() => { intro.style.display = 'none'; }, 800);
 
-            // تحريك الخريطة
+            // تحريك الخريطة للزاوية
             var map = document.getElementById('smart-map');
             map.classList.remove('map-initial');
             map.classList.add('map-corner');
 
             // نطق المقدمة
-            speak();
+            speakIntro();
             
             // تفعيل الأصوات
             setTimeout(() => { window.dispatchEvent(new Event('resize')); }, 500);
@@ -169,9 +180,9 @@
             sounds.forEach(sound => { sound.components.sound.playSound(); sound.components.sound.stopSound(); });
         }
 
-        function speak() {
+        function speakIntro() {
             if ('speechSynthesis' in window) {
-                var msg = new SpeechSynthesisUtterance("بسم الله نبدأ.. أهلاً بكم في ممشى الهجر، تقبل الله طاعتكم ورياضتكم.");
+                var msg = new SpeechSynthesisUtterance("بسم الله نبدأ.. حياكم الله في ممشى الهجر، تقبل الله طاعتكم.");
                 msg.lang = 'ar-SA';
                 window.speechSynthesis.speak(msg);
             }
