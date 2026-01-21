@@ -10,132 +10,104 @@
     <script src="https://unpkg.com/aframe-look-at-component@0.8.0/dist/aframe-look-at-component.min.js"></script>
 
     <style>
-        /* إعدادات الشاشة والكاميرا */
-        html, body {
-            margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background-color: #000;
-        }
-        
-        #arjs-video {
-            width: 100% !important; height: 100% !important; object-fit: cover !important;
-            position: absolute !important; top: 0; left: 0; z-index: -1; margin: 0 !important;
+        /* تنظيف الصفحة بالكامل */
+        body, html {
+            margin: 0; padding: 0; overflow: hidden;
+            background-color: transparent !important; /* هام جداً: خلفية شفافة */
         }
 
-        /* واجهة المستخدم */
+        /* واجهة المستخدم تطفو فوق الكاميرا */
         #ui-overlay {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(15, 23, 42, 0.95);
+            background: rgba(15, 23, 42, 0.9); /* خلفية داكنة للبداية فقط */
             z-index: 9999; display: flex; flex-direction: column;
             align-items: center; justify-content: center; color: white; text-align: center;
+            transition: opacity 0.5s;
         }
 
-        .map-container {
-            width: 85%; height: 200px; background: #334155;
-            border-radius: 15px; margin-bottom: 20px; 
-            border: 2px solid #22d3ee;
+        /* إطار الخريطة */
+        .map-box {
+            width: 80%; height: 200px; background: #334155;
+            border: 2px solid #22d3ee; border-radius: 15px; margin-bottom: 20px;
             display: flex; align-items: center; justify-content: center;
         }
-        
-        h1 { color: #22d3ee; margin-bottom: 10px; font-size: 1.8em; font-family: 'Tajawal', sans-serif; }
-        p { color: #cbd5e1; max-width: 80%; line-height: 1.6; font-family: 'Tajawal', sans-serif; }
 
-        #start-btn {
-            background: linear-gradient(90deg, #0891b2, #22d3ee);
-            border: none; padding: 12px 40px; color: white; font-size: 18px; 
-            border-radius: 30px; cursor: pointer; margin-top: 20px;
+        h1 { color: #22d3ee; margin: 0 0 10px; font-family: 'Tajawal', sans-serif; }
+        p { color: #cbd5e1; font-family: 'Tajawal', sans-serif; }
+
+        /* زر البدء */
+        button {
+            background: #22d3ee; color: #0f172a; border: none; padding: 15px 40px;
+            font-size: 18px; font-weight: bold; border-radius: 50px; cursor: pointer;
+            margin-top: 20px;
         }
 
-        .footer { position: absolute; bottom: 20px; width: 100%; color: #94a3b8; font-size: 0.8em; font-family: 'Tajawal', sans-serif; }
-        
-        .arjs-loader { display: none !important; }
+        /* التوقيع */
+        .footer { position: absolute; bottom: 20px; color: #94a3b8; font-size: 12px; }
+
+        /* إصلاح مشكلة الكاميرا السوداء */
+        .arjs-loader { display: none !important; } 
     </style>
 </head>
 
 <body>
 
     <div id="ui-overlay">
-        <div class="map-container">
-            <p>خريطة المسار</p> 
+        <div class="map-box">
+            <p>خريطة المسار</p>
         </div>
-        <h1>ممشى الهجر السياحي</h1>
-        <p>اكتشف المعلومات الزراعية والمعالم السياحية بتقنية الواقع المعزز.</p>
-        <button id="start-btn" onclick="startExperience()">ابدأ الجولة</button>
-        <div class="footer">تعديل وإنشاء : سامي السمري</div>
+        <h1>ممشى الهجر</h1>
+        <p>جولة تفاعلية بالواقع المعزز</p>
+        <button onclick="startApp()">ابدأ الجولة</button>
+        <div class="footer">تعديل وإنشاء: سامي السمري</div>
     </div>
 
     <a-scene 
         vr-mode-ui="enabled: false"
         embedded
-        arjs="sourceType: webcam; sourceWidth: 1280; sourceHeight: 720; displayWidth: 1280; displayHeight: 720; debugUIEnabled: false;"
-        renderer="antialias: true; alpha: true; precision: high; logarithmicDepthBuffer: true;">
+        arjs="sourceType: webcam; debugUIEnabled: false;"
+        renderer="antialias: true; alpha: true;">
 
-        <a-camera gps-camera rotation-reader far="3000"></a-camera>
+        <a-camera gps-camera rotation-reader far="1000"></a-camera>
+
+        <a-entity position="0 0 -3">
+            <a-cone color="#22d3ee" position="0 0.5 0" radius-bottom="0.2" radius-top="0" height="0.5" rotation="180 0 0"></a-cone>
+            <a-text value="تجربة الشكل" align="center" position="0 1 0" color="white" scale="1.5 1.5 1.5"></a-text>
+        </a-entity>
+
 
         <a-entity gps-entity-place="latitude: 23.28061; longitude: 56.92604;">
-            <a-image src="#img-welcome" scale="3 2 1" look-at="[gps-camera]" position="0 2 0"></a-image>
-            <a-text value="بداية ممشى الهجر" look-at="[gps-camera]" position="0 0.8 0" align="center" color="#22d3ee" scale="1.5 1.5 1.5"></a-text>
+            <a-image src="#img-welcome" scale="2 2 1" look-at="[gps-camera]" position="0 2 0"></a-image>
         </a-entity>
 
-        <a-entity gps-entity-place="latitude: 23.28036333; longitude: 56.926905;">
-            <a-image src="#img-agri-1" scale="4 3 1" look-at="[gps-camera]" position="0 2.5 0"></a-image>
-            <a-sound src="#voice-info-1" autoplay="false" distanceModel="exponential" maxDistance="15"></a-sound>
-        </a-entity>
-
-        <a-entity gps-entity-place="latitude: 23.28022167; longitude: 56.92759333;" rotation="0 0 0">
-             <a-entity position="0 0.1 0" rotation="-90 0 0">
-                 <a-triangle color="#00ffcc" vertex-a="0 1 0" vertex-b="-0.5 -0.5 0" vertex-c="0.5 -0.5 0" material="opacity: 0.9; emissive: #00ffcc; emissiveIntensity: 2"></a-triangle>
-                 <a-plane color="#00ffcc" width="0.3" height="1" position="0 -1 0" material="opacity: 0.9; emissive: #00ffcc; emissiveIntensity: 2"></a-plane>
-             </a-entity>
-             <a-animation attribute="position" to="0 0.5 0" direction="alternate" dur="2000" repeat="indefinite"></a-animation>
-        </a-entity>
-
-        <a-entity gps-entity-place="latitude: 23.27842833; longitude: 56.93257;">
-             <a-text value="نهاية المسار\nشكراً لزيارتكم" look-at="[gps-camera]" scale="5 5 5" position="0 4 0" color="#4ade80" align="center"></a-text>
+        <a-entity gps-entity-place="latitude: 23.28022167; longitude: 56.92759333;">
+            <a-entity position="0 0 0" rotation="0 0 0" animation="property: position; to: 0 0.5 0; dir: alternate; dur: 2000; loop: true">
+                 <a-triangle color="#22d3ee" vertex-a="0 0.5 0" vertex-b="-0.25 -0.25 0" vertex-c="0.25 -0.25 0" rotation="-90 0 0"></a-triangle>
+            </a-entity>
         </a-entity>
 
         <a-assets>
             <img id="img-welcome" src="board_welcome.jpg">
-            <img id="img-agri-1" src="board_agri_1.jpg">
-            <img id="img-agri-2" src="board_agri_2.jpg">
-            <img id="img-landmark" src="board_landmark.jpg">
-            <audio id="voice-info-1" src="info_voice_1.mp3"></audio>
-        </a-assets>
+            </a-assets>
 
     </a-scene>
 
     <script>
-        function startExperience() {
-            // إخفاء الواجهة
-            document.getElementById('ui-overlay').style.display = 'none';
-            
-            // 1. تشغيل قراءة المقدمة (بدون ملف)
-            speakIntro();
+        function startApp() {
+            // إخفاء الواجهة ببطء
+            var ui = document.getElementById('ui-overlay');
+            ui.style.opacity = '0';
+            setTimeout(function(){ ui.style.display = 'none'; }, 500);
 
-            // 2. تحديث حجم الكاميرا
-            setTimeout(() => {
-                window.dispatchEvent(new Event('resize'));
-            }, 500);
-
-            // 3. تفعيل الأصوات المحيطية الأخرى
-            const sounds = document.querySelectorAll('a-sound');
-            sounds.forEach(sound => {
-                sound.components.sound.playSound();
-                sound.components.sound.stopSound();
-            });
+            // نطق المقدمة
+            speak();
         }
 
-        // دالة نطق المقدمة
-        function speakIntro() {
-            // النص الذي سيتم قراءته
-            const text = "حياكم الله في ممشى الهجر. نتمنى لكم جولة ممتعة ومفيدة.";
-            
+        function speak() {
             if ('speechSynthesis' in window) {
-                const utterance = new SpeechSynthesisUtterance(text);
-                utterance.lang = 'ar-SA'; // محاولة ضبط اللهجة للسعودية/الخليج
-                utterance.rate = 0.9;     // سرعة أبطأ قليلاً للوقار
-                utterance.volume = 1;     // الصوت كامل
-                window.speechSynthesis.speak(utterance);
-            } else {
-                console.log("المتصفح لا يدعم القراءة الصوتية");
+                var msg = new SpeechSynthesisUtterance("حياكم الله في ممشى الهجر");
+                msg.lang = 'ar-SA';
+                window.speechSynthesis.speak(msg);
             }
         }
     </script>
