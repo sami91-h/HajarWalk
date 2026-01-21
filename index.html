@@ -10,9 +10,17 @@
     <script src="https://unpkg.com/aframe-look-at-component@0.8.0/dist/aframe-look-at-component.min.js"></script>
 
     <style>
-        body { margin: 0; overflow: hidden; font-family: 'Tajawal', sans-serif; }
+        /* إعدادات الشاشة والكاميرا */
+        html, body {
+            margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background-color: #000;
+        }
         
-        /* واجهة البدء */
+        #arjs-video {
+            width: 100% !important; height: 100% !important; object-fit: cover !important;
+            position: absolute !important; top: 0; left: 0; z-index: -1; margin: 0 !important;
+        }
+
+        /* واجهة المستخدم */
         #ui-overlay {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(15, 23, 42, 0.95);
@@ -27,8 +35,8 @@
             display: flex; align-items: center; justify-content: center;
         }
         
-        h1 { color: #22d3ee; margin-bottom: 10px; font-size: 1.8em; }
-        p { color: #cbd5e1; max-width: 80%; line-height: 1.6; }
+        h1 { color: #22d3ee; margin-bottom: 10px; font-size: 1.8em; font-family: 'Tajawal', sans-serif; }
+        p { color: #cbd5e1; max-width: 80%; line-height: 1.6; font-family: 'Tajawal', sans-serif; }
 
         #start-btn {
             background: linear-gradient(90deg, #0891b2, #22d3ee);
@@ -36,9 +44,8 @@
             border-radius: 30px; cursor: pointer; margin-top: 20px;
         }
 
-        .footer { position: absolute; bottom: 20px; width: 100%; color: #94a3b8; font-size: 0.8em; }
+        .footer { position: absolute; bottom: 20px; width: 100%; color: #94a3b8; font-size: 0.8em; font-family: 'Tajawal', sans-serif; }
         
-        /* إخفاء شعار التحميل */
         .arjs-loader { display: none !important; }
     </style>
 </head>
@@ -47,17 +54,19 @@
 
     <div id="ui-overlay">
         <div class="map-container">
-            <p>خريطة المسار</p> </div>
+            <p>خريطة المسار</p> 
+        </div>
         <h1>ممشى الهجر السياحي</h1>
-        <p>اكتشف المعلومات الزراعية والمعالم السياحية بتقنية الواقع المعزز أثناء سيرك في الممشى.</p>
+        <p>اكتشف المعلومات الزراعية والمعالم السياحية بتقنية الواقع المعزز.</p>
         <button id="start-btn" onclick="startExperience()">ابدأ الجولة</button>
         <div class="footer">تعديل وإنشاء : سامي السمري</div>
     </div>
 
     <a-scene 
         vr-mode-ui="enabled: false"
-        arjs="sourceType: webcam; videoTexture: true; debugUIEnabled: false;"
-        renderer="antialias: true; alpha: true;">
+        embedded
+        arjs="sourceType: webcam; sourceWidth: 1280; sourceHeight: 720; displayWidth: 1280; displayHeight: 720; debugUIEnabled: false;"
+        renderer="antialias: true; alpha: true; precision: high; logarithmicDepthBuffer: true;">
 
         <a-camera gps-camera rotation-reader far="3000"></a-camera>
 
@@ -71,39 +80,12 @@
             <a-sound src="#voice-info-1" autoplay="false" distanceModel="exponential" maxDistance="15"></a-sound>
         </a-entity>
 
-        <a-entity gps-entity-place="latitude: 23.XXXXXX; longitude: 56.XXXXXX;" rotation="0 0 0">
-    
-    <a-cone 
-        color="#00ffcc" 
-        radius-bottom="0.5" 
-        radius-top="0" 
-        height="1.5" 
-        position="0 0.1 -1" 
-        rotation="90 0 0" 
-        material="opacity: 0.9; emissive: #00ffcc; emissiveIntensity: 2">
-    </a-cone>
-
-    <a-box 
-        color="#00ffcc" 
-        width="0.3" 
-        height="0.1" 
-        depth="1.5" 
-        position="0 0.1 0.5" 
-        material="opacity: 0.9; emissive: #00ffcc; emissiveIntensity: 2">
-    </a-box>
-
-    <a-animation attribute="scale" dur="2000" from="1 1 1" to="1.1 1.1 1.1" direction="alternate" repeat="indefinite"></a-animation>
-
-</a-entity>
-        
-
-        <a-entity gps-entity-place="latitude: 23.27963; longitude: 56.92968333;">
-            <a-image src="#img-agri-2" scale="4 3 1" look-at="[gps-camera]" position="0 2.5 0"></a-image>
-            <a-text value="موسم الحصاد" look-at="[gps-camera]" position="0 4.2 0" align="center" color="#fcd34d" scale="2 2 2"></a-text>
-        </a-entity>
-
-        <a-entity gps-entity-place="latitude: 23.27885333; longitude: 56.93137167;">
-            <a-image src="#img-landmark" scale="5 3 1" look-at="[gps-camera]" position="0 4 0"></a-image>
+        <a-entity gps-entity-place="latitude: 23.28022167; longitude: 56.92759333;" rotation="0 0 0">
+             <a-entity position="0 0.1 0" rotation="-90 0 0">
+                 <a-triangle color="#00ffcc" vertex-a="0 1 0" vertex-b="-0.5 -0.5 0" vertex-c="0.5 -0.5 0" material="opacity: 0.9; emissive: #00ffcc; emissiveIntensity: 2"></a-triangle>
+                 <a-plane color="#00ffcc" width="0.3" height="1" position="0 -1 0" material="opacity: 0.9; emissive: #00ffcc; emissiveIntensity: 2"></a-plane>
+             </a-entity>
+             <a-animation attribute="position" to="0 0.5 0" direction="alternate" dur="2000" repeat="indefinite"></a-animation>
         </a-entity>
 
         <a-entity gps-entity-place="latitude: 23.27842833; longitude: 56.93257;">
@@ -111,21 +93,50 @@
         </a-entity>
 
         <a-assets>
-            <img id="img-welcome" src="board_welcome.jpg">   <img id="img-agri-1" src="board_agri_1.jpg">     <img id="img-agri-2" src="board_agri_2.jpg">     <img id="img-landmark" src="board_landmark.jpg"> <audio id="voice-info-1" src="info_voice_1.mp3"></audio>
+            <img id="img-welcome" src="board_welcome.jpg">
+            <img id="img-agri-1" src="board_agri_1.jpg">
+            <img id="img-agri-2" src="board_agri_2.jpg">
+            <img id="img-landmark" src="board_landmark.jpg">
+            <audio id="voice-info-1" src="info_voice_1.mp3"></audio>
         </a-assets>
 
     </a-scene>
 
     <script>
         function startExperience() {
+            // إخفاء الواجهة
             document.getElementById('ui-overlay').style.display = 'none';
             
-            // تفعيل الأصوات لتعمل عند الاقتراب (بسبب سياسات المتصفح)
+            // 1. تشغيل قراءة المقدمة (بدون ملف)
+            speakIntro();
+
+            // 2. تحديث حجم الكاميرا
+            setTimeout(() => {
+                window.dispatchEvent(new Event('resize'));
+            }, 500);
+
+            // 3. تفعيل الأصوات المحيطية الأخرى
             const sounds = document.querySelectorAll('a-sound');
             sounds.forEach(sound => {
                 sound.components.sound.playSound();
-                sound.components.sound.stopSound(); // إيقاف فوري لتجهيزها للعمل بالمسافة
+                sound.components.sound.stopSound();
             });
+        }
+
+        // دالة نطق المقدمة
+        function speakIntro() {
+            // النص الذي سيتم قراءته
+            const text = "حياكم الله في ممشى الهجر. نتمنى لكم جولة ممتعة ومفيدة.";
+            
+            if ('speechSynthesis' in window) {
+                const utterance = new SpeechSynthesisUtterance(text);
+                utterance.lang = 'ar-SA'; // محاولة ضبط اللهجة للسعودية/الخليج
+                utterance.rate = 0.9;     // سرعة أبطأ قليلاً للوقار
+                utterance.volume = 1;     // الصوت كامل
+                window.speechSynthesis.speak(utterance);
+            } else {
+                console.log("المتصفح لا يدعم القراءة الصوتية");
+            }
         }
     </script>
 </body>
