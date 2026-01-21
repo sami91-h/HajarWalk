@@ -71,10 +71,31 @@
             <a-sound src="#voice-info-1" autoplay="false" distanceModel="exponential" maxDistance="15"></a-sound>
         </a-entity>
 
-        <a-entity gps-entity-place="latitude: 23.28022167; longitude: 56.92759333;">
-            <a-cylinder color="#22d3ee" height="0.1" radius="0.5" material="opacity: 0.7"></a-cylinder>
-            <a-text value="اكمل المسير" look-at="[gps-camera]" position="0 1 0" align="center" color="white"></a-text>
-        </a-entity>
+        <a-entity gps-entity-place="latitude: 23.XXXXXX; longitude: 56.XXXXXX;" rotation="0 0 0">
+    
+    <a-cone 
+        color="#00ffcc" 
+        radius-bottom="0.5" 
+        radius-top="0" 
+        height="1.5" 
+        position="0 0.1 -1" 
+        rotation="90 0 0" 
+        material="opacity: 0.9; emissive: #00ffcc; emissiveIntensity: 2">
+    </a-cone>
+
+    <a-box 
+        color="#00ffcc" 
+        width="0.3" 
+        height="0.1" 
+        depth="1.5" 
+        position="0 0.1 0.5" 
+        material="opacity: 0.9; emissive: #00ffcc; emissiveIntensity: 2">
+    </a-box>
+
+    <a-animation attribute="scale" dur="2000" from="1 1 1" to="1.1 1.1 1.1" direction="alternate" repeat="indefinite"></a-animation>
+
+</a-entity>
+        
 
         <a-entity gps-entity-place="latitude: 23.27963; longitude: 56.92968333;">
             <a-image src="#img-agri-2" scale="4 3 1" look-at="[gps-camera]" position="0 2.5 0"></a-image>
