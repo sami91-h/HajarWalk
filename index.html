@@ -2,253 +2,109 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>ممشى الهجر | المهندس سامي</title>
-    
-    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;500;800&display=swap" rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>ممشى الهجر - الواقع المعزز</title>
     
     <script src="https://aframe.io/releases/1.3.0/aframe.min.js"></script>
-    <script src="https://unpkg.com/aframe-look-at-component@0.8.0/dist/aframe-look-at-component.min.js"></script>
     <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar-nft.js"></script>
-    
+    <script src="https://unpkg.com/aframe-look-at-component@0.8.0/dist/aframe-look-at-component.min.js"></script>
+
     <style>
-        /* --- 1. الحل الجذري للمستطيل الأسود --- */
-        body, html {
-            margin: 0; padding: 0; width: 100%; height: 100%;
-            overflow: hidden; background: #000; font-family: 'Tajawal', sans-serif;
+        body { margin: 0; overflow: hidden; font-family: 'Tajawal', sans-serif; }
+        
+        /* واجهة البدء */
+        #ui-overlay {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(15, 23, 42, 0.95);
+            z-index: 9999; display: flex; flex-direction: column;
+            align-items: center; justify-content: center; color: white; text-align: center;
         }
 
-        /* هذا الكود يجبر الفيديو أن يكون في المنتصف ويغطي الشاشة مهما كان حجمها */
-        #arjs-video {
-            position: absolute !important;
-            top: 50% !important;
-            left: 50% !important;
-            width: auto !important;
-            height: auto !important;
-            min-width: 100% !important;
-            min-height: 100% !important;
-            transform: translate(-50%, -50%) !important;
-            object-fit: cover !important;
-            z-index: -2 !important;
-            margin: 0 !important;
+        .map-container {
+            width: 85%; height: 200px; background: #334155;
+            border-radius: 15px; margin-bottom: 20px; 
+            border: 2px solid #22d3ee;
+            display: flex; align-items: center; justify-content: center;
         }
         
-        /* طبقة الكانفاس تتبع نفس المنطق */
-        .a-canvas {
-            width: 100% !important; height: 100% !important;
-            position: absolute !important; top: 0; left: 0;
-            z-index: 1 !important;
+        h1 { color: #22d3ee; margin-bottom: 10px; font-size: 1.8em; }
+        p { color: #cbd5e1; max-width: 80%; line-height: 1.6; }
+
+        #start-btn {
+            background: linear-gradient(90deg, #0891b2, #22d3ee);
+            border: none; padding: 12px 40px; color: white; font-size: 18px; 
+            border-radius: 30px; cursor: pointer; margin-top: 20px;
         }
 
-        /* --- 2. التصميم (نفس التصميم السابق) --- */
-        :root { --gold: #FFD700; --glass: rgba(20, 20, 20, 0.6); }
+        .footer { position: absolute; bottom: 20px; width: 100%; color: #94a3b8; font-size: 0.8em; }
         
-        /* شاشة البداية */
-        #splash {
-            position: fixed; inset: 0;
-            background: linear-gradient(to bottom, rgba(0,0,0,0.2), rgba(0,0,0,0.9)), url('https://images.unsplash.com/photo-1518531933037-91b2f5f229cc?q=80&w=1000');
-            background-size: cover; display: flex; flex-direction: column; justify-content: flex-end; padding: 30px; z-index: 9999; color: white; transition: 0.5s;
-        }
-        .btn { background: var(--gold); color: #000; border: none; padding: 18px; width: 100%; border-radius: 24px; font-size: 1.2rem; font-weight: bold; cursor: pointer; box-shadow: 0 0 30px rgba(255, 215, 0, 0.4); }
-
-        /* التنبيهات */
-        #notification {
-            position: fixed; top: 100px; left: 50%; transform: translateX(-50%);
-            background: rgba(0, 0, 0, 0.8); border: 1px solid var(--gold);
-            padding: 10px 20px; border-radius: 30px; color: var(--gold);
-            font-weight: bold; display: none; z-index: 200; animation: popIn 0.5s;
-        }
-
-        /* الواجهة */
-        #hud { position: fixed; inset: 0; pointer-events: none; z-index: 100; display: none; padding: 20px; }
-        .radar { width: 80px; height: 80px; border-radius: 50%; background: var(--glass); border: 2px solid rgba(255,255,255,0.2); position: relative; overflow: hidden; }
-        #radar-dot { width: 10px; height: 10px; background: #0f0; border-radius: 50%; position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); }
-        .footer { position: absolute; bottom: 30px; width: 100%; text-align: center; color: rgba(255,255,255,0.6); font-size: 0.8rem; }
-
-        @keyframes popIn { from { transform: translate(-50%, -20px); opacity: 0; } to { transform: translate(-50%, 0); opacity: 1; } }
+        /* إخفاء شعار التحميل */
+        .arjs-loader { display: none !important; }
     </style>
 </head>
 
 <body>
 
-    <div id="splash">
-        <h1 style="font-size: 2.5rem; margin-bottom: 5px; color: var(--gold);">ممشى الهجر</h1>
-        <p style="opacity: 0.8; margin-bottom: 30px;">المسار المضيء & المعرض الافتراضي</p>
-        <button class="btn" onclick="startExp()">ابدأ الجولة 🚀</button>
-    </div>
-
-    <div id="notification">📸 اكتشفت صورة تاريخية!</div>
-
-    <div id="hud">
-        <div class="radar"><div id="radar-dot"></div></div>
-        <div class="footer">تطوير: المهندس سامي</div>
+    <div id="ui-overlay">
+        <div class="map-container">
+            <p>خريطة المسار</p> </div>
+        <h1>ممشى الهجر السياحي</h1>
+        <p>اكتشف المعلومات الزراعية والمعالم السياحية بتقنية الواقع المعزز أثناء سيرك في الممشى.</p>
+        <button id="start-btn" onclick="startExperience()">ابدأ الجولة</button>
+        <div class="footer">تعديل وإنشاء : سامي السمري</div>
     </div>
 
     <a-scene 
-        vr-mode-ui="enabled: false" 
-        embedded 
-        arjs="sourceType: webcam; debugUIEnabled: false; videoTexture: true;" 
-        renderer="logarithmicDepthBuffer: true; precision: high; antialias: true; alpha: true;">
-        
-        <a-camera gps-camera rotation-reader minDistance="1" maxDistance="2000"></a-camera>
+        vr-mode-ui="enabled: false"
+        arjs="sourceType: webcam; videoTexture: true; debugUIEnabled: false;"
+        renderer="antialias: true; alpha: true;">
+
+        <a-camera gps-camera rotation-reader far="3000"></a-camera>
+
+        <a-entity gps-entity-place="latitude: 23.28061; longitude: 56.92604;">
+            <a-image src="#img-welcome" scale="3 2 1" look-at="[gps-camera]" position="0 2 0"></a-image>
+            <a-text value="بداية ممشى الهجر" look-at="[gps-camera]" position="0 0.8 0" align="center" color="#22d3ee" scale="1.5 1.5 1.5"></a-text>
+        </a-entity>
+
+        <a-entity gps-entity-place="latitude: 23.28036333; longitude: 56.926905;">
+            <a-image src="#img-agri-1" scale="4 3 1" look-at="[gps-camera]" position="0 2.5 0"></a-image>
+            <a-sound src="#voice-info-1" autoplay="false" distanceModel="exponential" maxDistance="15"></a-sound>
+        </a-entity>
+
+        <a-entity gps-entity-place="latitude: 23.28022167; longitude: 56.92759333;">
+            <a-cylinder color="#22d3ee" height="0.1" radius="0.5" material="opacity: 0.7"></a-cylinder>
+            <a-text value="اكمل المسير" look-at="[gps-camera]" position="0 1 0" align="center" color="white"></a-text>
+        </a-entity>
+
+        <a-entity gps-entity-place="latitude: 23.27963; longitude: 56.92968333;">
+            <a-image src="#img-agri-2" scale="4 3 1" look-at="[gps-camera]" position="0 2.5 0"></a-image>
+            <a-text value="موسم الحصاد" look-at="[gps-camera]" position="0 4.2 0" align="center" color="#fcd34d" scale="2 2 2"></a-text>
+        </a-entity>
+
+        <a-entity gps-entity-place="latitude: 23.27885333; longitude: 56.93137167;">
+            <a-image src="#img-landmark" scale="5 3 1" look-at="[gps-camera]" position="0 4 0"></a-image>
+        </a-entity>
+
+        <a-entity gps-entity-place="latitude: 23.27842833; longitude: 56.93257;">
+             <a-text value="نهاية المسار\nشكراً لزيارتكم" look-at="[gps-camera]" scale="5 5 5" position="0 4 0" color="#4ade80" align="center"></a-text>
+        </a-entity>
+
+        <a-assets>
+            <img id="img-welcome" src="board_welcome.jpg">   <img id="img-agri-1" src="board_agri_1.jpg">     <img id="img-agri-2" src="board_agri_2.jpg">     <img id="img-landmark" src="board_landmark.jpg"> <audio id="voice-info-1" src="info_voice_1.mp3"></audio>
+        </a-assets>
+
     </a-scene>
 
     <script>
-        // --- دالة إصلاح الشاشة السوداء برمجياً ---
-        // يتم استدعاؤها فور تحميل الصفحة وعند تدوير الشاشة
-        function fixVideoSize() {
-            const video = document.getElementById('arjs-video');
-            if (video) {
-                // إجبار الفيديو على تجاوز حدود الشاشة ليتم قصه وتغطية الفراغات
-                video.style.minWidth = "100vw";
-                video.style.minHeight = "100vh";
-                video.style.width = "auto";
-                video.style.height = "auto";
-                video.style.top = "50%";
-                video.style.left = "50%";
-                video.style.transform = "translate(-50%, -50%)";
-            }
-        }
-        window.addEventListener('resize', fixVideoSize);
-        window.addEventListener('load', fixVideoSize);
-
-        // --- بقية الكود (البيانات والمنطق) ---
-        
-        // تم استخراج البيانات من ملف GeoJSON الذي رفعته
-        const pathCoords = [
-            [56.92604, 23.28061], [56.92609, 23.2806], [56.92613, 23.28059], 
-            [56.92620, 23.28058], [56.92625, 23.28057], [56.92631, 23.28056],
-            [56.92634, 23.28052], [56.92639, 23.28048], [56.92644, 23.28045],
-            [56.92649, 23.28043], [56.92654, 23.28043], [56.92660, 23.28042],
-            [56.92670, 23.28041], [56.92688, 23.28036], [56.92698, 23.28032],
-            [56.92706, 23.28027], [56.92713, 23.28024], [56.92781, 23.28017],
-            [56.92825, 23.28005], [56.92899, 23.27985], [56.92970, 23.2796],
-            [56.93030, 23.27927], [56.93149, 23.27887], [56.93247, 23.27845]
-        ];
-
-        const galleryImages = [
-            "https://images.unsplash.com/photo-1545231027-637d2f6210f8?w=500", 
-            "https://images.unsplash.com/photo-1596524430615-b46475ddff6e?w=500", 
-            "https://images.unsplash.com/photo-1578895210405-927f05f3c8b0?w=500" 
-        ];
-
-        async function startExp() {
-            try {
-                // طلب الكاميرا وانتظار التشغيل
-                await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
-                
-                document.getElementById('splash').style.display = 'none';
-                document.getElementById('hud').style.display = 'block';
-                
-                initAR();
-                startTracking();
-                
-                // تطبيق إصلاح الشاشة مرة أخرى للتأكيد
-                setTimeout(fixVideoSize, 500);
-                setTimeout(fixVideoSize, 2000);
-                
-                speak("يا هلا ومرحبا فيك في ممشى الهجر. اتبع الخط الأرضي المتوهج.");
-            } catch (e) { 
-                alert("يرجى السماح للكاميرا"); 
-            }
-        }
-
-        function initAR() {
-            const scene = document.querySelector('a-scene');
+        function startExperience() {
+            document.getElementById('ui-overlay').style.display = 'none';
             
-            pathCoords.forEach((pt, i) => {
-                const [lng, lat] = pt;
-
-                // الخط الأرضي
-                const floorDot = document.createElement('a-entity');
-                floorDot.setAttribute('gps-entity-place', `latitude: ${lat}; longitude: ${lng};`);
-                floorDot.innerHTML = `<a-circle radius="0.8" color="#FFD700" rotation="-90 0 0" material="opacity: 0.6; transparent: true; shader: flat"></a-circle>`;
-                scene.appendChild(floorDot);
-
-                // الصور
-                if (i > 0 && i % 6 === 0) {
-                    const imgIndex = (i / 6) % galleryImages.length;
-                    createARImage(lat, lng, galleryImages[imgIndex], scene, i);
-                }
+            // تفعيل الأصوات لتعمل عند الاقتراب (بسبب سياسات المتصفح)
+            const sounds = document.querySelectorAll('a-sound');
+            sounds.forEach(sound => {
+                sound.components.sound.playSound();
+                sound.components.sound.stopSound(); // إيقاف فوري لتجهيزها للعمل بالمسافة
             });
-        }
-
-        function createARImage(lat, lng, imgSrc, scene, id) {
-            const container = document.createElement('a-entity');
-            container.setAttribute('gps-entity-place', `latitude: ${lat}; longitude: ${lng};`);
-            container.setAttribute('look-at', '[gps-camera]'); 
-            
-            container.setAttribute('visible', 'false'); 
-            container.setAttribute('class', 'ar-image-marker');
-            container.setAttribute('data-lat', lat);
-            container.setAttribute('data-lng', lng);
-
-            container.innerHTML = `
-                <a-image src="${imgSrc}" width="3" height="2" position="0 2 0"></a-image>
-                <a-plane width="3.2" height="2.2" position="0 2 -0.1" color="black" material="opacity: 0.7"></a-plane>
-                <a-text value="معلم تاريخي" align="center" position="0 0.8 0" color="gold" scale="1.5 1.5 1.5"></a-text>
-            `;
-            
-            scene.appendChild(container);
-        }
-
-        function startTracking() {
-            navigator.geolocation.watchPosition(pos => {
-                const userLat = pos.coords.latitude;
-                const userLng = pos.coords.longitude;
-                
-                updateRadar(userLat, userLng);
-
-                document.querySelectorAll('.ar-image-marker').forEach(marker => {
-                    const mLat = parseFloat(marker.getAttribute('data-lat'));
-                    const mLng = parseFloat(marker.getAttribute('data-lng'));
-                    const dist = getDistance(userLat, userLng, mLat, mLng);
-
-                    if (dist < 20 && marker.getAttribute('visible') === 'false') {
-                        marker.setAttribute('visible', 'true');
-                        marker.setAttribute('animation', 'property: scale; from: 0 0 0; to: 1 1 1; dur: 1000; easing: easeOutElastic');
-                        showNotification();
-                        speak("وصلت لمعلم تاريخي. شوف الصورة قدامك.");
-                    }
-                });
-            }, null, { enableHighAccuracy: true });
-        }
-
-        function updateRadar(lat, lng) {
-            const bounds = { n: 23.2810, s: 23.2780, e: 56.9330, w: 56.9250 };
-            const y = ((bounds.n - lat) / (bounds.n - bounds.s)) * 100;
-            const x = ((lng - bounds.w) / (bounds.e - bounds.w)) * 100;
-            const dot = document.getElementById('radar-dot');
-            dot.style.top = Math.min(Math.max(y, 10), 90) + '%';
-            dot.style.left = Math.min(Math.max(x, 10), 90) + '%';
-        }
-
-        function getDistance(lat1, lon1, lat2, lon2) {
-            const R = 6371e3; 
-            const dLat = (lat2-lat1) * Math.PI/180;
-            const dLon = (lon2-lon1) * Math.PI/180;
-            const a = Math.sin(dLat/2) * Math.sin(dLat/2) + Math.cos(lat1 * Math.PI/180) * Math.cos(lat2 * Math.PI/180) * Math.sin(dLon/2) * Math.sin(dLon/2);
-            return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-        }
-
-        function showNotification() {
-            const notif = document.getElementById('notification');
-            notif.style.display = 'block';
-            setTimeout(() => { notif.style.display = 'none'; }, 4000);
-        }
-
-        function speak(text) {
-            if ('speechSynthesis' in window) {
-                window.speechSynthesis.cancel();
-                const u = new SpeechSynthesisUtterance(text);
-                u.lang = 'ar-SA'; 
-                u.rate = 0.85; 
-                u.pitch = 0.9; 
-                const voices = window.speechSynthesis.getVoices();
-                const arabicVoice = voices.find(v => v.lang.includes('ar') && (v.name.includes('Maged') || v.name.includes('Tariq')));
-                if (arabicVoice) u.voice = arabicVoice;
-                window.speechSynthesis.speak(u);
-            }
         }
     </script>
 </body>
